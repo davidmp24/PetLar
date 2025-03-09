@@ -1,0 +1,62 @@
+/* Dark Mode - Fundo e texto */
+body {
+    background-color: #2d2d2d;
+    color: #dcdcdc;
+}
+
+/* Estilo do menu lateral */
+.navbar-dark .navbar-nav .nav-link {
+    color: #dcdcdc;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff;
+}
+
+/* Fundo do conteúdo principal */
+.container-fluid {
+    background-color: #333;
+}
+
+/* Barra de navegação lateral */
+.navbar {
+    height: 100vh;
+}
+
+/* Personalizando botões */
+.btn-primary {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.btn-primary:hover {
+    background-color: #45a049;
+    border-color: #45a049;
+}
+
+/* Estilo para os formulários */
+input, select, textarea {
+    background-color: #444;
+    border: 1px solid #555;
+    color: #ddd;
+}
+
+input:focus, select:focus, textarea:focus {
+    background-color: #555;
+    color: #fff;
+    border-color: #6c757d;
+}
+
+/* Títulos e textos */
+h1, h2, h3 {
+    color: #fff;
+}
+
+/* Links */
+a {
+    color: #ffbb33;
+}
+
+a:hover {
+    color: #ffdd66;
+}

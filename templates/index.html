@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container text-center py-5">
+        <h1 class="display-4 text-white">Bem-vindo ao PetLar!</h1>
+        <p class="lead text-white">Adote um amigo e faça a diferença na vida de um animal.</p>
+        <a href="{{ url_for('listar_animais') }}" class="btn btn-light btn-lg">Ver Animais Disponíveis</a>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3 class="text-white">Adote um Animal</h3>
+                <p class="text-white">Escolha entre uma variedade de animais que precisam de um lar.</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="text-white">Cadastrar Animal</h3>
+                <p class="text-white">Se você é responsável por um animal e deseja colocá-lo para adoção, cadastre-o aqui.</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="text-white">Cadastrar Adotante</h3>
+                <p class="text-white">Quer adotar? Cadastre-se e encontre o animal perfeito para você.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
