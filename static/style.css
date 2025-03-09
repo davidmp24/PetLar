@@ -60,3 +60,41 @@ a {
 a:hover {
     color: #ffdd66;
 }
+
+/* Estilo geral para o modo escuro */
+body {
+    background-color: #343541; /* Cor de fundo igual ao ChatGPT */
+    color: #ffffff; /* Texto branco */
+    font-family: Arial, sans-serif;
+}
+
+/* Estilo do container principal */
+.container {
+    background-color: #40414F; /* Cor do container para ficar semelhante */
+    border-radius: 10px;
+    padding: 20px;
+}
+
+/* Estilização do menu lateral */
+.navbar {
+    background-color: #202123 !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #E0E0E0 !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+}
+
+/* Botões */
+.btn {
+    background-color: #565869;
+    color: #ffffff;
+    border: none;
+}
+
+.btn:hover {
+    background-color: #70717F;
+}

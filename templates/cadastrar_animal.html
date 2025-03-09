@@ -1,0 +1,152 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-light">Cadastrar Novo Animal</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <form method="POST" enctype="multipart/form-data">
+           
+            <!-- Informações Básicas do Animal -->
+            <h4 class="text-light">Informações Básicas do Animal</h4>
+             <!-- Código do Animal (Gerado Automaticamente) -->
+             <div class="mb-3">
+                <label for="codigo_animal" class="form-label">Código do Animal</label>
+                <input type="text" class="form-control bg-secondary text-light" id="codigo_animal" name="codigo_animal" value="{{ codigo_animal }}" disabled>
+                <small class="form-text text-light">Este código é única para cada animal.</small>
+            </div>
+            <div class="mb-3">
+                <label for="nome" class="form-label">Nome do Animal</label>
+                <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Nome do animal, ex: Rex, Tom">
+            </div>
+            <div class="mb-3">
+                <label for="raca" class="form-label">Raça</label>
+                <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata">
+            </div>
+            <div class="mb-3">
+                <label for="especie" class="form-label">Espécie</label>
+                <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato">
+            </div>
+            <div class="mb-3">
+                <label for="sexo" class="form-label">Sexo</label>
+                <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
+                    <option value="" disabled selected>Selecione o sexo</option>
+                    <option value="Macho">Macho</option>
+                    <option value="Fêmea">Fêmea</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="idade" class="form-label">Idade</label>
+                <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Idade aproximada do animal">
+            </div>           
+        
+            <!-- Características Comportamentais -->
+            <h4 class="text-light mt-4">Características Comportamentais</h4>
+            <div class="mb-3">
+                <label for="temperamento" class="form-label">Temperamento</label>
+                <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo, Agitado, Agressivo">
+            </div>
+            <div class="mb-3">
+                <label for="comportamento_outros" class="form-label">Comportamento com outros animais</label>
+                <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita outros cães, Gosta de gatos">
+            </div>
+            <div class="mb-3">
+                <label for="comportamento_criancas" class="form-label">Comportamento com crianças</label>
+                <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca com crianças, Cauteloso">
+            </div>
+            
+            <!-- Histórico Médico -->
+            <h4 class="text-light mt-4">Histórico Médico</h4>
+            <div class="mb-3">
+                <label for="vacinado" class="form-label">Vacinado</label>
+                <select class="form-select bg-secondary text-light" id="vacinado" name="vacinado" required>
+                    <option value="" disabled selected>Selecione uma opção</option>
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                </select>
+                <small class="form-text text-light">Informe se o animal recebeu as vacinas obrigatórias.</small>
+            </div>
+            <div class="mb-3">
+                <label for="desparacitado" class="form-label">Desparacitado</label>
+                <select class="form-select bg-secondary text-light" id="desparacitado" name="desparacitado" required>
+                    <option value="" disabled selected>Selecione uma opção</option>
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                </select>
+                <small class="form-text text-light">Informação sobre o estado de vermifugação.</small>
+            </div>
+            <div class="mb-3">
+                <label for="castrado" class="form-label">Castrado</label>
+                <select class="form-select bg-secondary text-light" id="castrado" name="castrado" required>
+                    <option value="" disabled selected>Selecione uma opção</option>
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="doencas_preexistentes" class="form-label">Doenças Preexistentes</label>
+                <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="3" placeholder="Descreva se o animal possui alguma doença crônica ou pré-existente"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="tratamentos" class="form-label">Tratamentos em Andamento</label>
+                <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="3" placeholder="Detalhe os tratamentos médicos que o animal está recebendo, se houver"></textarea>
+            </div>
+            
+            <!-- Aparência Física -->
+            <h4 class="text-light mt-4">Aparência Física</h4>
+            <div class="mb-3">
+                <label for="cor" class="form-label">Cor do Pelagem</label>
+                <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto, Branco, Marrom">
+            </div>
+            <div class="mb-3">
+                <label for="tamanho" class="form-label">Tamanho</label>
+                <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho" required>
+                    <option value="" disabled selected>Selecione o tamanho</option>
+                    <option value="Pequeno">Pequeno</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Grande">Grande</option>
+                </select>
+            </div>
+            
+            <!-- Fotos e Vídeos -->
+            <h4 class="text-light mt-4">Fotos e Vídeos</h4>
+            <div class="mb-3">
+                <label for="foto" class="form-label">Foto do Animal</label>
+                <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" required>
+                <small class="form-text text-light">Carregue uma foto clara e recente do animal.</small>
+            </div>
+            
+            <!-- Localização -->
+            <h4 class="text-light mt-4">Localização</h4>
+            <div class="mb-3">
+                <label for="localizacao" class="form-label">Localização do Animal</label>
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" required placeholder="Informe a cidade ou o bairro onde o animal está localizado">
+            </div>
+            
+            <!-- Status de Adoção -->
+            <h4 class="text-light mt-4">Status de Adoção</h4>
+            <div class="mb-3">
+                <label for="status_adoção" class="form-label">Status</label>
+                <select class="form-select bg-secondary text-light" id="status_adoção" name="status_adoção" required>
+                    <option value="" disabled selected>Selecione o status do animal</option>
+                    <option value="Disponível">Disponível</option>
+                    <option value="Adoção em Andamento">Adoção em Andamento</option>
+                    <option value="Adotado">Adotado</option>
+                </select>
+            </div>
+            
+            <!-- Contato e Informações Adicionais -->
+            <h4 class="text-light mt-4">Contato e Informações Adicionais</h4>
+            <div class="mb-3">
+                <label for="contato" class="form-label">Contato do Responsável</label>
+                <input type="text" class="form-control bg-secondary text-light" id="contato" name="contato" placeholder="Nome, telefone ou e-mail do responsável">
+            </div>
+            <div class="mb-3">
+                <label for="observacoes" class="form-label">Observações Adicionais</label>
+                <textarea class="form-control bg-secondary text-light" id="observacoes" name="observacoes" rows="3" placeholder="Outras observações sobre o animal ou informações adicionais"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Cadastrar Animal</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
