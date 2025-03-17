@@ -88,6 +88,12 @@ body {
     color: #ffffff !important;
 }
 
+.custom-small {
+    font-size: 7px;
+    font-style: italic;
+    color: gray;
+  }
+
 /* Botões */
 .btn {
     background-color: #565869;
@@ -98,3 +104,4 @@ body {
 .btn:hover {
     background-color: #70717F;
 }
+
