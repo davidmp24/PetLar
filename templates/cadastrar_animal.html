@@ -1,0 +1,148 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-light">Cadastrar Novo Animal</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <form method="POST" enctype="multipart/form-data">
+          
+            <!-- Informações Básicas do Animal -->
+            <h4 class="text-light">Informações Básicas</h4>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="codigo_animal" class="form-label">Código</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="codigo_animal" name="codigo_animal" value="{{ codigo_animal }}" readonly>
+                </div>
+                <div class="col-md-9">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="raca" class="form-label">Raça</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata">
+                </div>
+                <div class="col-md-6">
+                    <label for="especie" class="form-label">Espécie</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sexo" class="form-label">Sexo</label>
+                    <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="Macho">Macho</option>
+                        <option value="Fêmea">Fêmea</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="idade" class="form-label">Idade</label>
+                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2 anos">
+                </div>
+            </div>
+            
+            <!-- Características Comportamentais -->
+            <h4 class="text-light mt-4">Comportamento</h4>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="temperamento" class="form-label">Temperamento</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="comportamento_outros" class="form-label">Com outros animais</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita cães">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="comportamento_criancas" class="form-label">Com crianças</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca muito">
+                </div>
+            </div>
+            
+            <!-- Histórico Médico -->
+            <h4 class="text-light mt-4">Histórico Médico</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="doencas_preexistentes" class="form-label">Doenças</label>
+                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma"></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tratamentos" class="form-label">Tratamentos</label>
+                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Antibiótico"></textarea>
+                </div>
+            </div>
+            
+            <!-- Aparência Física -->
+            <h4 class="text-light mt-4">Aparência</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cor" class="form-label">Cor</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tamanho" class="form-label">Tamanho</label>
+                    <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="Pequeno">Pequeno</option>
+                        <option value="Médio">Médio</option>
+                        <option value="Grande">Grande</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Localização -->
+            <h4 class="text-light mt-4">Localização</h4>
+            <div class="mb-3">
+                <label for="localizacao" class="form-label">Onde está?</label>
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" required placeholder="Ex: Bairro X, Cidade Y">
+            </div>
+            
+             <!-- Foto do Animal -->
+             <h4 class="text-light mt-4">Foto do Animal</h4>
+             <div class="mb-3">
+                 <label for="foto" class="form-label">Upload da Foto</label>
+                 <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewImage(event)">
+             </div>
+             <div id="preview-container" class="mb-3" style="display: none;">
+                 <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage()">Remover</button>
+             </div>
+ 
+             <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Cadastrar Animal</button>
+                <button type="reset" class="btn btn-secondary" onclick="resetForm()">Limpar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = "block";
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+    function removeImage() {
+        document.getElementById('foto').value = "";
+        document.getElementById('preview-container').style.display = "none";
+    }
+
+    function resetForm() {
+        document.getElementById('preview').classList.add('d-none');
+        document.getElementById('removeImage').classList.add('d-none');
+    }
+</script>
+
+{% endblock %}

@@ -1,93 +1,240 @@
-/* static/style.css */
+/* static/style.css - Tema Escuro com Sidebar */
+
+:root {
+    /* --- Paleta Dark Theme --- */
+    --bg-dark-primary: #1f1f1f;    /* Fundo principal (o mais escuro) */
+    --bg-dark-secondary: #2d2d2d; /* Fundo para elementos sobrepostos (cards, inputs) */
+    --bg-dark-tertiary: #3a3a3a;  /* Fundo para elementos interativos (hover) */
+    --bg-sidebar: #252525;        /* Fundo específico da Sidebar */
+    --border-dark: #444444;       /* Bordas sutis */
+
+    --text-light-primary: #e0e0e0; /* Texto principal (branco suave) */
+    --text-light-secondary: #b0b0b0;/* Texto secundário (cinza claro) */
+    --text-link-sidebar: #c0c0c0;  /* Cor do link da sidebar */
+    --text-link-sidebar-hover: #ffffff;
+    --text-link-sidebar-active: #ffffff;
+
+    --accent-blue: #8ab4f8;       /* Azul de destaque */
+    --link-color: var(--accent-blue);
+    --link-hover-color: #a6caff;
+
+    /* Cores Bootstrap Adaptadas */
+    --bs-success-dark: #1e4d2b; --bs-success-text: #a3d9b1;
+    --bs-info-dark: #0b3c5d;    --bs-info-text: #9eeaf9;
+    --bs-warning-dark: #5d3a00; --bs-warning-text: #ffdca6;
+    --bs-danger-dark: #5c1c1f;  --bs-danger-text: #f7b9bb;
+
+    --sidebar-width: 260px;       /* Largura da Sidebar */
+}
+
+/* --- Reset Básico e Fontes --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
     margin: 0;
-    padding: 20px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-light-primary);
+    background-color: var(--bg-dark-primary);
+    min-height: 100vh;
 }
 
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
+/* --- Layout Principal (Sidebar + Conteúdo) --- */
+.page-wrapper {
+    display: flex;
+    min-height: 100vh;
 }
 
-.alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
+/* --- Sidebar --- */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh; /* Altura total da janela */
+    position: fixed; /* Fica fixa na tela */
+    top: 0;
+    left: 0;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-dark);
+    display: flex;
+    flex-direction: column;
+    padding-top: 1rem;
+    transition: width 0.3s ease; /* Para futuras animações de recolher */
+    overflow-y: auto; /* Barra de rolagem se o conteúdo for maior */
 }
-
-.alert-danger {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
+.sidebar-header {
+    padding: 0.5rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
 }
-
-/* Estilos para cards de animais */
-.card {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card-header {
+.sidebar-header .navbar-brand {
+    color: var(--text-light-primary);
     font-weight: bold;
+    font-size: 1.2rem;
+    text-decoration: none;
+}
+.sidebar-header .navbar-brand:hover {
+    color: var(--accent-blue);
 }
 
-.list-group-item {
-    padding: 0.5rem 1rem;
+.sidebar-nav {
+    padding: 0 1rem; /* Espaçamento lateral para os itens */
+    flex-grow: 1; /* Ocupa o espaço restante na sidebar */
+}
+.sidebar-nav .nav-item {
+    margin-bottom: 0.25rem;
+}
+.sidebar-nav .nav-link {
+    color: var(--text-link-sidebar);
+    padding: 0.75rem 1rem; /* Espaçamento interno do link */
+    display: flex;
+    align-items: center;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap; /* Impede quebra de linha */
+    overflow: hidden;    /* Esconde texto que não cabe */
+    text-overflow: ellipsis; /* Adiciona '...' se não couber */
+}
+.sidebar-nav .nav-link i.fa-fw { /* Ícones com largura fixa */
+    width: 1.5em; /* Ajuste a largura conforme necessário */
+    text-align: center;
+    font-size: 1.1em; /* Tamanho do ícone */
+    margin-right: 0.8rem; /* Espaço entre ícone e texto */
+}
+.sidebar-nav .nav-link:hover {
+    background-color: var(--bg-dark-tertiary);
+    color: var(--text-link-sidebar-hover);
+}
+.sidebar-nav .nav-link.active {
+    background-color: var(--accent-blue); /* Cor de destaque para ativo */
+    color: var(--bg-dark-primary); /* Cor do texto para contraste */
+    font-weight: 500;
+}
+.sidebar-divider {
+    margin: 1rem 1rem;
+    border-top: 1px solid var(--border-dark);
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-    .col-md-4 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
+/* --- Área de Conteúdo Principal --- */
+.main-content {
+    margin-left: var(--sidebar-width); /* Empurra o conteúdo para a direita */
+    flex-grow: 1; /* Ocupa o espaço restante */
+    padding: 0; /* Remove padding padrão se houver */
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Importante para flexbox */
+}
+.content-header {
+    background-color: var(--bg-dark-secondary); /* Um pouco diferente do conteúdo */
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-dark);
+    /* Adicione estilos para o h4 se necessário */
+}
+.content-body {
+    padding: 1.5rem; /* Espaçamento interno da área de conteúdo */
+    flex-grow: 1; /* Ocupa espaço vertical */
 }
 
-/* Estilos para a página de matches */
-.card.border-success {
-    border: 2px solid #28a745 !important;
-}
+/* --- Estilos Gerais (Herdados da versão anterior, ajustados) --- */
 
-.card.border-warning {
-    border: 2px solid #ffc107 !important;
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-light-primary);
+    font-weight: 500;
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
 }
+p { color: var(--text-light-primary); line-height: 1.6; margin-bottom: 1rem; }
+strong, b { color: var(--text-light-secondary); font-weight: 600; }
+hr:not(.sidebar-divider) { border-top: 1px solid var(--border-dark); opacity: 0.5; margin: 1.5rem 0; }
+a { color: var(--link-color); text-decoration: none; }
+a:hover { color: var(--link-hover-color); text-decoration: underline; }
 
-.card.border-danger {
-    border: 2px solid #dc3545 !important;
+/* Formulários */
+.form-control, .form-select {
+    background-color: var(--bg-dark-secondary);
+    color: var(--text-light-primary);
+    border: 1px solid var(--border-dark);
 }
-
-.badge.rounded-pill {
-    font-size: 1em;
+.form-control::placeholder { color: var(--text-light-secondary); opacity: 0.7; }
+.form-control:focus, .form-select:focus {
+    background-color: var(--bg-dark-secondary);
+    color: var(--text-light-primary);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 0.2rem rgba(138, 180, 248, 0.25);
+    outline: none;
 }
+.form-select option { background-color: var(--bg-dark-secondary); color: var(--text-light-primary); }
+.form-label { color: var(--text-light-secondary); margin-bottom: 0.5rem; }
+.form-check-input { background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); }
+.form-check-input:checked { background-color: var(--accent-blue); border-color: var(--accent-blue); }
+.form-check-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 0.2rem rgba(138, 180, 248, 0.25); outline: none; }
+.form-check-label { color: var(--text-light-secondary); }
 
-.list-group-item {
-    padding: 0.75rem 1.25rem;
-}
+/* Botões */
+.btn { border-radius: 0.375rem; font-weight: 500; }
+.btn-primary { background-color: #375a7f; border-color: #375a7f; color: white; }
+.btn-primary:hover { background-color: #2b4a6a; border-color: #2b4a6a; }
+.btn-success { background-color: #1e7e34; border-color: #1e7e34; color: white;}
+.btn-success:hover { background-color: #176028; border-color: #176028; }
+/* ... outros estilos de botão ... */
+.btn-outline-secondary { color: var(--text-light-secondary); border-color: var(--border-dark); }
+.btn-outline-secondary:hover { color: var(--text-light-primary); background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); }
 
-/* Estilos para o formulário de login */
+/* Cards */
 .card {
-    max-width: 500px;
-    margin: 0 auto;
+    background-color: var(--bg-dark-secondary);
+    border: 1px solid var(--border-dark);
+    color: var(--text-light-primary);
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
 }
+.card-header { background-color: var(--bg-dark-tertiary); border-bottom: 1px solid var(--border-dark); color: var(--text-light-primary); font-weight: 500; }
+.card-header.bg-primary { background-color: #375a7f !important; color: white;}
+.card-header.bg-info { background-color: #1a4a7f !important; color: white;}
+.card-body { line-height: 1.6; }
+.card-footer { background-color: var(--bg-dark-secondary); border-top: 1px solid var(--border-dark); }
 
-.card-footer {
-    background-color: transparent;
-}
+/* Alertas */
+.alert { border-radius: 0.375rem; border-width: 1px; border-style: solid; padding: 1rem; margin-bottom: 1rem; }
+.alert-success { background-color: var(--bs-success-dark); color: var(--bs-success-text); border-color: rgba(163, 217, 177, 0.5); }
+.alert-danger { background-color: var(--bs-danger-dark); color: var(--bs-danger-text); border-color: rgba(247, 185, 187, 0.5); }
+.alert-warning { background-color: var(--bs-warning-dark); color: var(--bs-warning-text); border-color: rgba(255, 220, 166, 0.5); }
+.alert-info { background-color: var(--bs-info-dark); color: var(--bs-info-text); border-color: rgba(158, 234, 249, 0.5); }
+.alert .btn-close { filter: invert(80%) sepia(10%) saturate(100%) hue-rotate(180deg) brightness(100%) contrast(80%); opacity: 0.7; }
+.alert .btn-close:hover { opacity: 1; }
 
-.btn-primary {
-    background-color: #4e73df;
-    border-color: #4e73df;
-}
+/* Listas */
+.list-group-item { background-color: transparent; border-color: var(--border-dark); color: var(--text-light-primary); }
+.list-group-flush > .list-group-item { border-width: 0 0 1px; }
+.list-group-flush > .list-group-item:last-child { border-bottom-width: 0; }
+.list-group-item.text-success { color: var(--bs-success-text) !important; }
+.list-group-item.text-danger { color: var(--bs-danger-text) !important; }
+.list-group-item.text-muted { color: #888 !important; }
 
-.btn-primary:hover {
-    background-color: #2e59d9;
-    border-color: #2653d4;
+/* Badges */
+.badge { font-weight: 500; }
+.badge.bg-primary { background-color: var(--accent-blue) !important; color: var(--bg-dark-primary); }
+/* ... outros estilos de badge ... */
+
+/* --- Responsividade (Exemplo Básico) --- */
+/* Em telas menores que 'lg' (992px), escondemos a sidebar fixa
+   e removemos a margem do conteúdo. Você precisaria adicionar um
+   botão toggle e talvez usar o Offcanvas do Bootstrap para uma
+   experiência móvel completa. */
+@media (max-width: 991.98px) {
+    .sidebar {
+        /* Pode esconder completamente ou reduzir a largura */
+        /* display: none; */
+        width: 0; /* Exemplo simples de "esconder" */
+        padding: 0;
+        overflow: hidden;
+        border: none;
+    }
+    .main-content {
+        margin-left: 0; /* Remove a margem quando a sidebar some */
+    }
+    /* Você precisaria de um botão para mostrar/esconder a sidebar (ex: usando Offcanvas) */
 }
