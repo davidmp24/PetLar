@@ -1,0 +1,92 @@
+<!-- templates/listar_animais.html -->
+{% extends 'index.html' %}
+
+{% block title %}Listar Animais - PetLar{% endblock %}
+
+{% block page_title %}Animais Cadastrados{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="text-light">Lista de Animais</h3>
+            <a href="{{ url_for('cadastrar_animal') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> Cadastrar Novo Animal
+            </a>
+        </div>
+
+        {% if animais %}
+        <div class="table-responsive"> <!-- Adicionado para melhor responsividade -->
+            <table class="table table-dark table-striped table-hover align-middle"> <!-- align-middle para centralizar verticalmente -->
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Foto</th>
+                        <th scope="col">Nome</th>
+                        <th scope="col">Espécie</th>
+                        <th scope="col">Raça</th>
+                        <th scope="col">Idade</th>
+                        <th scope="col">Sexo</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" style="min-width: 200px;">Ações</th> <!-- Largura mínima para ações -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for animal in animais %}
+                    <tr>
+                        <th scope="row">{{ animal.id }}</th>
+                        <td>
+                            {% if animal.foto_filename %}
+                                <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% endif %}
+                        </td>
+                        <td>{{ animal.nome }}</td>
+                        <td>{{ animal.especie }}</td>
+                        <td>{{ animal.raca or 'N/I' }}</td>
+                        <td>{{ animal.idade if animal.idade is not none else 'N/I' }}</td>
+                        <td>{{ animal.sexo or 'N/I' }}</td>
+                        <td>
+                            {% if animal.adotado %}
+                                <span class="badge bg-secondary">Adotado</span>
+                            {% else %}
+                                <span class="badge bg-success">Disponível</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1"> <!-- Flexbox para botões não quebrarem estranho -->
+                                <!-- Botão Ver Detalhes (Link GET) -->
+                                <a href="{{ url_for('detalhes_animal', animal_id=animal.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+
+                                <!-- Botão Editar (Link GET para formulário) -->
+                                <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                                <!-- Corrigido aqui! -->
+                                <!-- Botão Excluir (Formulário POST) -->
+                                <form action="{{ url_for('excluir_animal', animal_id=animal.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir {{ animal.nome }}?');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir"><i class="fas fa-trash"></i></button>
+                                    <!-- Adicionar CSRF token aqui se usar Flask-WTF -->
+                                </form>
+
+                                <!-- Botão Marcar Adotado (Formulário POST - Só aparece se não adotado) -->
+                                {% if not animal.adotado %}
+                                <form action="{{ url_for('marcar_adotado', animal_id=animal.id) }}" method="POST" style="display: inline;">
+                                     <button type="submit" class="btn btn-sm btn-primary" title="Marcar Adotado"><i class="fas fa-check"></i></button>
+                                     <!-- Adicionar CSRF token aqui se usar Flask-WTF -->
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Nenhum animal cadastrado ainda.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

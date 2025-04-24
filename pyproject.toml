@@ -1,0 +1,9 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "petlar" # Nome do seu pacote
+version = "0.1.0"
+# Adicione outras metadados se desejar

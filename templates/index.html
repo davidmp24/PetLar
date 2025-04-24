@@ -96,18 +96,18 @@
                  <h4>{% block page_title %}Bem-vindo ao PetLar{% endblock %}</h4> <!-- Título padrão -->
             </header>
             <div class="container-fluid content-body"> <!-- Mantendo a estrutura da base antiga -->
-                <!-- Exibição de mensagens Flash (do app.py atual) -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-
+                                <!-- === Bloco para exibir mensagens Flash === -->
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            <!-- === Fim do Bloco de Mensagens Flash === -->
                 <!-- Bloco onde o conteúdo específico de cada página será inserido -->
                 {% block content %}{% endblock %}
             </div>
