@@ -1,0 +1,243 @@
+{% extends 'index.html' %}
+
+{% block title %}Editar Adotante: {{ adotante.nome_completo }} - PetLar{% endblock %}
+
+{% block page_title %}Editar Adotante{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-light">Editar Adotante</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        {# O action agora aponta para a rota que processa a edição #}
+        <form method="POST" action="{{ url_for('editar_adotante_submit', adotante_id=adotante.id) }}">
+            <!-- ID do Adotante (Apenas para exibição) -->
+            <div class="mb-3">
+                <label class="form-label">ID do Adotante</label>
+                <input type="text" class="form-control bg-secondary text-light" value="{{ adotante.id }}" readonly style="max-width: 100px;">
+            </div>
+
+            <!-- Informações Pessoais -->
+            <h4 class="text-light">Informações Pessoais</h4>
+            <div class="mb-3">
+                <label for="nome_completo" class="form-label">Nome Completo</label>
+                {# Preenche com o valor existente #}
+                <input type="text" class="form-control bg-secondary text-light" id="nome_completo" name="nome_completo" required value="{{ adotante.nome_completo or '' }}">
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="rg" class="form-label">RG</label>
+                    {# Preenche com o valor existente #}
+                    <input type="text" class="form-control bg-secondary text-light" id="rg" name="rg" required value="{{ adotante.rg or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="cpf" class="form-label">CPF</label>
+                    {# Preenche com o valor existente #}
+                    <input type="text" class="form-control bg-secondary text-light" id="cpf" name="cpf" required value="{{ adotante.cpf or '' }}" onblur="validarCPF(this.value)">
+                    <div id="cpf-error" class="text-danger"></div>
+                </div>
+            </div>
+
+            <!-- Informações de Contato -->
+            <h4 class="text-light mt-4">Contato</h4>
+            <div class="row mb-3 align-items-end"> {# Use align-items-end para alinhar botão com input menor #}
+                <div class="col-md-6">
+                    <label for="cep" class="form-label">CEP</label>
+                    {# Preenche com o valor existente #}
+                    <input type="text" class="form-control form-control-sm bg-secondary text-light" id="cep" name="cep" required value="{{ adotante.cep or '' }}">
+                    <div id="cep-error" class="text-danger"></div>
+                </div>
+                <div class="col-md-6"> {# Botão na mesma linha #}
+                    {# Adicionei margin-bottom para espaçamento em telas menores #}
+                    <button type="button" class="btn btn-primary w-auto mb-1" onclick="buscarEndereco(document.getElementById('cep').value)">
+                        <i class="fas fa-search"></i> Buscar CEP
+                    </button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="endereco" class="form-label">Endereço</label>
+                 {# Preenche com o valor existente #}
+                <input type="text" class="form-control bg-secondary text-light" id="endereco" name="endereco" required value="{{ adotante.endereco or '' }}">
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6"> {# Ajustado para col-md-6 para ocupar melhor espaço #}
+                    <label for="bairro" class="form-label">Bairro</label>
+                     {# Preenche com o valor existente #}
+                    <input type="text" class="form-control bg-secondary text-light" id="bairro" name="bairro" required value="{{ adotante.bairro or '' }}">
+                </div>
+                <div class="col-md-6"> {# Ajustado para col-md-6 #}
+                    <label for="cidade" class="form-label">Cidade</label>
+                     {# Preenche com o valor existente #}
+                    <input type="text" class="form-control bg-secondary text-light" id="cidade" name="cidade" required value="{{ adotante.cidade or '' }}">
+                </div>
+            </div>
+
+             <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                 {# Preenche com o valor existente #}
+                <input type="email" class="form-control bg-secondary text-light" id="email" name="email" required value="{{ adotante.email or '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="telefone" class="form-label">Telefone</label>
+                 {# Preenche com o valor existente #}
+                <input type="text" class="form-control bg-secondary text-light" id="telefone" name="telefone" required value="{{ adotante.telefone or '' }}">
+            </div>
+
+            <!-- Informações sobre Interesse em Adoção -->
+            <h4 class="text-light mt-4">Interesse em Adoção</h4>
+            <div class="mb-3">
+                <label for="animal_interesse" class="form-label">Animal de Interesse (Nome)</label>
+                 {# Preenche com o valor existente #}
+                <input type="text" class="form-control bg-secondary text-light" id="animal_interesse" name="animal_interesse" required value="{{ adotante.animal_interesse or '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="tipo_animal_interesse" class="form-label">Tipo de Animal de Interesse</label>
+                 {# Seleciona a opção correspondente ao valor existente #}
+                <select class="form-select bg-secondary text-light" id="tipo_animal_interesse" name="tipo_animal_interesse" required>
+                    <option value="" disabled {% if not adotante.tipo_animal_interesse %}selected{% endif %}>Selecione</option>
+                    <option value="Cachorro" {% if adotante.tipo_animal_interesse == 'Cachorro' %}selected{% endif %}>Cachorro</option>
+                    <option value="Gato" {% if adotante.tipo_animal_interesse == 'Gato' %}selected{% endif %}>Gato</option>
+                    <option value="Ave" {% if adotante.tipo_animal_interesse == 'Ave' %}selected{% endif %}>Ave</option>
+                    <option value="Outro" {% if adotante.tipo_animal_interesse == 'Outro' %}selected{% endif %}>Outro</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="justificativa_adocao" class="form-label">Por que você deseja adotar?</label>
+                 {# Preenche a textarea com o valor existente #}
+                <textarea class="form-control bg-secondary text-light" id="justificativa_adocao" name="justificativa_adocao" rows="3" required>{{ adotante.justificativa_adocao or '' }}</textarea>
+            </div>
+
+            <!-- Questionário -->
+            <h4 class="text-light mt-4">Questionário</h4>
+            <div class="mb-3">
+                <label class="form-label">Você tem outros animais em casa?</label>
+                 {# Marca o radio button correspondente ao valor existente #}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tem_outros_animais" id="tem_outros_animais_sim" value="Sim" onclick="mostrarCamposAnimais()" {% if adotante.tem_outros_animais == 'Sim' %}checked{% endif %}>
+                    <label class="form-check-label" for="tem_outros_animais_sim">Sim</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tem_outros_animais" id="tem_outros_animais_nao" value="Nao" onclick="esconderCamposAnimais()" {% if adotante.tem_outros_animais != 'Sim' %}checked{% endif %}>
+                    <label class="form-check-label" for="tem_outros_animais_nao">Não</label>
+                </div>
+            </div>
+
+            <!-- Campos adicionais (controlados por JS) -->
+            <div id="campos_animais" style="display: none;"> {# JS controlará a exibição inicial #}
+                <div class="mb-3">
+                    <label for="quantidade_animais" class="form-label">Quantidade de animais que você possui</label>
+                    {# Preenche com o valor existente #}
+                    <input type="number" class="form-control bg-secondary text-light" id="quantidade_animais" name="quantidade_animais" min="1" placeholder="Ex: 2" value="{{ adotante.quantidade_animais if adotante.quantidade_animais is not none else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="tipos_animais" class="form-label">Quais animais você possui?</label>
+                     {# Preenche com o valor existente #}
+                    <input type="text" class="form-control bg-secondary text-light" id="tipos_animais" name="tipos_animais" placeholder="Ex: Cachorro, Gato, Pássaro" value="{{ adotante.tipos_animais or '' }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="tempo_sozinho" class="form-label">Quantas horas por dia o animal ficaria sozinho?</label>
+                 {# Preenche com o valor existente #}
+                <input type="number" class="form-control bg-secondary text-light" id="tempo_sozinho" name="tempo_sozinho" min="0" placeholder="Ex: 4" value="{{ adotante.tempo_sozinho if adotante.tempo_sozinho is not none else '' }}">
+            </div>
+
+            <!-- Foto Pessoal -->
+    <h4 class="text-light mt-4">Foto Pessoal (Opcional)</h4>
+    {# Bloco para exibir foto atual na edição #}
+    {% if request.endpoint == 'editar_adotante_form' and adotante.foto_pessoal_filename %}
+    <div class="mb-2">
+        <p>Foto Pessoal Atual:</p>
+        <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_pessoal_filename) }}" alt="Foto de {{ adotante.nome_completo }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+    </div>
+    {% endif %}
+    <div class="mb-3">
+        <label for="foto_pessoal" class="form-label">{% if request.endpoint == 'editar_adotante_form' and adotante.foto_pessoal_filename %}Substituir Foto Pessoal{% else %}Upload Foto Pessoal{% endif %}</label>
+        {# Nome do input é 'foto_pessoal' #}
+        <input type="file" class="form-control bg-secondary text-light" id="foto_pessoal" name="foto_pessoal" accept="image/*" onchange="previewImage(event, 'preview-pessoal-image', 'preview-pessoal-container')">
+         {% if request.endpoint == 'editar_adotante_form' and adotante.foto_pessoal_filename %}
+            <small class="form-text text-muted">Deixe em branco para manter a foto atual.</small>
+         {% endif %}
+    </div>
+    <!-- Preview da NOVA imagem Pessoal -->
+    <div id="preview-pessoal-container" class="mb-3" style="display: none;">
+        <p>Nova Foto Pessoal (Preview):</p>
+        <img id="preview-pessoal-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage('foto_pessoal', 'preview-pessoal-image', 'preview-pessoal-container')">Remover Nova Foto</button>
+    </div>
+            <!-- Foto do Local -->
+            <h4 class="text-light mt-4">Foto do Local de Habitação (Opcional)</h4>
+            {# Bloco para exibir foto atual na edição #}
+            {% if request.endpoint == 'editar_adotante_form' and adotante.foto_local_filename %}
+            <div class="mb-2">
+                <p>Foto do Local Atual:</p>
+                <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_local_filename) }}" alt="Foto do local" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+            </div>
+            {% endif %}
+            <div class="mb-3">
+                <label for="foto_local" class="form-label">{% if request.endpoint == 'editar_adotante_form' and adotante.foto_local_filename %}Substituir Foto do Local{% else %}Upload Foto do Local{% endif %}</label>
+                {# Nome do input é 'foto_local' #}
+                <input type="file" class="form-control bg-secondary text-light" id="foto_local" name="foto_local" accept="image/*" onchange="previewImage(event, 'preview-local-image', 'preview-local-container')">
+                {% if request.endpoint == 'editar_adotante_form' and adotante.foto_local_filename %}
+                    <small class="form-text text-muted">Deixe em branco para manter a foto atual.</small>
+                {% endif %}
+            </div>
+            <!-- Preview da NOVA imagem Local -->
+            <div id="preview-local-container" class="mb-3" style="display: none;">
+                <p>Nova Foto do Local (Preview):</p>
+                <img id="preview-local-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage('foto_local', 'preview-local-image', 'preview-local-container')">Remover Nova Foto</button>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="d-flex justify-content-between mt-4">
+                 <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                 <a href="{{ url_for('listar_adotantes') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
+            </div>
+        </form> {# Fechamento do form #}
+        {# ... (Resto da div container/card) ... #}
+        
+        {# Scripts JS Atualizados para Múltiplos Previews #}
+        {% block scripts %}
+        <script>
+            function previewImage(event, previewImageId, previewContainerId) {
+                const input = event.target;
+                const previewContainer = document.getElementById(previewContainerId);
+                const previewImage = document.getElementById(previewImageId);
+        
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = "block";
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    previewContainer.style.display = "none";
+                    previewImage.src = "";
+                }
+            }
+        
+            function removeImage(inputId, previewImageId, previewContainerId) {
+                document.getElementById(inputId).value = ""; // Limpa o input file
+                document.getElementById(previewImageId).src = "";
+                document.getElementById(previewContainerId).style.display = "none";
+            }
+        
+            // Lógica para campos condicionais (igual à anterior)
+            function mostrarCamposAnimais() { /* ... */ }
+            function esconderCamposAnimais() { /* ... */ }
+            document.addEventListener('DOMContentLoaded', function() {
+                 if (document.getElementById('tem_outros_animais_sim')?.checked) { // Adicionado '?' para segurança
+                    mostrarCamposAnimais();
+                 } else {
+                     esconderCamposAnimais();
+                 }
+            });
+        
+             // Função buscarEndereco (igual à anterior)
+             function buscarEndereco(cep) { /* ... */ }
+        </script>
+        {% endblock %} {# <--- VERIFIQUE SE ESTE ENDBLOCK ESTÁ PRESENTE #}
+
+{% endblock %} {# <--- ESTE ENDBLOCK FECHA O {% block content %} #}

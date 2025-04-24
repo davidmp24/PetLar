@@ -68,15 +68,22 @@
                                     <!-- Adicionar CSRF token aqui se usar Flask-WTF -->
                                 </form>
 
-                                <!-- Botão Marcar Adotado (Formulário POST - Só aparece se não adotado) -->
-                                {% if not animal.adotado %}
-                                <form action="{{ url_for('marcar_adotado', animal_id=animal.id) }}" method="POST" style="display: inline;">
-                                     <button type="submit" class="btn btn-sm btn-primary" title="Marcar Adotado"><i class="fas fa-check"></i></button>
-                                     <!-- Adicionar CSRF token aqui se usar Flask-WTF -->
-                                </form>
-                                {% endif %}
-                            </div>
-                        </td>
+                                 <!-- Botão Condicional: Marcar Adotado OU Marcar Disponível -->
+                                 {% if not animal.adotado %}
+                                 {# Se NÃO estiver adotado, mostra botão para MARCAR ADOTADO #}
+                                 <form action="{{ url_for('marcar_adotado', animal_id=animal.id) }}" method="POST" style="display: inline;">
+                                      <button type="submit" class="btn btn-sm btn-primary" title="Marcar Adotado"><i class="fas fa-check"></i></button>
+                                 </form>
+                             {% else %}
+                                 {# Se JÁ ESTIVER adotado, mostra botão para MARCAR DISPONÍVEL #}
+                                 <form action="{{ url_for('marcar_disponivel', animal_id=animal.id) }}" method="POST" style="display: inline;">
+                                      {# Usar um ícone de 'desfazer' ou similar #}
+                                      <button type="submit" class="btn btn-sm btn-success" title="Marcar Disponível"><i class="fas fa-undo"></i></button>
+                                 </form>
+                             {% endif %}
+                             <!-- Fim do Botão Condicional -->
+                         </div>
+                     </td>
                     </tr>
                     {% endfor %}
                 </tbody>

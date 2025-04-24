@@ -1,114 +1,136 @@
 {% extends 'index.html' %}
 
+{% block title %}Editar {{ animal.nome or 'Animal' }} - PetLar{% endblock %}
+
+{% block page_title %}Editar Animal{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center text-light">Cadastrar Novo Animal</h2>
+    <h2 class="text-center text-light">Editar Animal: {{ animal.nome }}</h2>
     <div class="card p-4 shadow-lg bg-dark text-light">
         <form method="POST" action="{{ url_for('editar_animal_submit', animal_id=animal.id) }}" enctype="multipart/form-data">
-          
+
             <!-- Informações Básicas do Animal -->
             <h4 class="text-light">Informações Básicas</h4>
             <div class="row mb-3">
                 <div class="col-md-3">
-                    <label for="codigo_animal" class="form-label">Código</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="codigo_animal" name="codigo_animal" value="{{ codigo_animal }}" readonly>
+                    <label for="animal_id" class="form-label">ID</label>
+                    {# O ID do animal é imutável, então apenas exibimos #}
+                    <input type="text" class="form-control bg-secondary text-light" id="animal_id" name="animal_id" value="{{ animal.id }}" readonly>
                 </div>
                 <div class="col-md-9">
                     <label for="nome" class="form-label">Nome</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom">
+                    {# Preenche o campo nome com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom" value="{{ animal.nome or '' }}">
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="raca" class="form-label">Raça</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata">
+                    {# Preenche o campo raça com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata" value="{{ animal.raca or '' }}">
                 </div>
                 <div class="col-md-6">
                     <label for="especie" class="form-label">Espécie</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato">
+                    {# Preenche o campo especie com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato" value="{{ animal.especie or '' }}">
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="sexo" class="form-label">Sexo</label>
+                    {# Seleciona a opção correspondente ao valor atual #}
                     <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option value="Macho">Macho</option>
-                        <option value="Fêmea">Fêmea</option>
+                        <option value="" disabled {% if not animal.sexo %}selected{% endif %}>Selecione</option>
+                        <option value="Macho" {% if animal.sexo == 'Macho' %}selected{% endif %}>Macho</option>
+                        <option value="Fêmea" {% if animal.sexo == 'Fêmea' %}selected{% endif %}>Fêmea</option>
                     </select>
                 </div>
-                <!-- Dentro do <form> em cadastrar_animal.html -->
-            <div class="mb-3">
-                <label for="descricao" class="form-label">Descrição</label>
-                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal..."></textarea>
-            </div>
-                <div class="col-md-6">
+                 <div class="col-md-6">
                     <label for="idade" class="form-label">Idade</label>
-                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2 anos">
+                    {# Preenche o campo idade com o valor atual, tratando None #}
+                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2" value="{{ animal.idade if animal.idade is not none else '' }}">
+                     <small class="form-text text-muted">Idade em anos/meses.</small>
                 </div>
             </div>
-            
+
+            <!-- Descrição (Movido para seção própria) -->
+            <h4 class="text-light mt-4">Descrição</h4>
+             <div class="mb-3">
+                <label for="descricao" class="form-label">Observações sobre o animal</label>
+                {# Preenche a textarea com o valor atual #}
+                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal...">{{ animal.descricao or '' }}</textarea>
+            </div>
+
             <!-- Características Comportamentais -->
             <h4 class="text-light mt-4">Comportamento</h4>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label for="temperamento" class="form-label">Temperamento</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo">
+                    {# Preenche o campo temperamento com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo" value="{{ animal.temperamento or '' }}">
                 </div>
                 <div class="col-md-4 mb-3">
                     <label for="comportamento_outros" class="form-label">Com outros animais</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita cães">
+                    {# Preenche o campo comportamento_outros com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita cães" value="{{ animal.comportamento_outros or '' }}">
                 </div>
                 <div class="col-md-4 mb-3">
                     <label for="comportamento_criancas" class="form-label">Com crianças</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca muito">
+                    {# Preenche o campo comportamento_criancas com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca muito" value="{{ animal.comportamento_criancas or '' }}">
                 </div>
             </div>
-            
+
             <!-- Histórico Médico -->
             <h4 class="text-light mt-4">Histórico Médico</h4>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="doencas_preexistentes" class="form-label">Doenças</label>
-                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma"></textarea>
+                    {# Preenche a textarea com o valor atual #}
+                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma">{{ animal.doencas_preexistentes or '' }}</textarea>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="tratamentos" class="form-label">Tratamentos</label>
-                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Antibiótico"></textarea>
+                     {# Preenche a textarea com o valor atual #}
+                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Antibiótico">{{ animal.tratamentos or '' }}</textarea>
                 </div>
             </div>
-            
+
             <!-- Aparência Física -->
             <h4 class="text-light mt-4">Aparência</h4>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="cor" class="form-label">Cor</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto">
+                    {# Preenche o campo cor com o valor atual #}
+                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto" value="{{ animal.cor or '' }}">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="tamanho" class="form-label">Tamanho</label>
-                    <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option value="Pequeno">Pequeno</option>
-                        <option value="Médio">Médio</option>
-                        <option value="Grande">Grande</option>
+                    {# Seleciona a opção correspondente ao valor atual #}
+                    <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho">
+                        <option value="" disabled {% if not animal.tamanho %}selected{% endif %}>Selecione</option>
+                        <option value="Pequeno" {% if animal.tamanho == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                        <option value="Médio" {% if animal.tamanho == 'Médio' %}selected{% endif %}>Médio</option>
+                        <option value="Grande" {% if animal.tamanho == 'Grande' %}selected{% endif %}>Grande</option>
                     </select>
                 </div>
             </div>
-            
+
             <!-- Localização -->
             <h4 class="text-light mt-4">Localização</h4>
             <div class="mb-3">
                 <label for="localizacao" class="form-label">Onde está?</label>
-                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" required placeholder="Ex: Bairro X, Cidade Y">
+                {# Preenche o campo localizacao com o valor atual #}
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" placeholder="Ex: Bairro X, Cidade Y" value="{{ animal.localizacao or '' }}">
             </div>
-            
+
              <!-- Foto do Animal -->
              <h4 class="text-light mt-4">Foto do Animal</h4>
             {% if animal.foto_filename %}
             <div class="mb-2">
                 <p>Foto Atual:</p>
-                <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
             </div>
             {% endif %}
             <div class="mb-3">
@@ -119,44 +141,52 @@
             <!-- Preview da NOVA imagem (opcional) -->
             <div id="preview-container" class="mb-3" style="display: none;">
                 <p>Nova Foto (Preview):</p>
-                <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage()">Remover Nova Foto</button>
             </div>
- 
-             <div class="d-flex justify-content-between">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary">Cancelar</a>
+
+             <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
+                <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
             </div>
         </form>
     </div>
 </div>
+
+{# Incluir o mesmo script de preview de imagem usado no cadastro #}
 <script>
     function previewImage(event) {
         const input = event.target;
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
 
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
 
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.style.display = "block";
-        };
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = "block";
+            };
 
-        reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            // Esconde o preview se nenhum arquivo for selecionado
+             previewContainer.style.display = "none";
+             previewImage.src = "";
+        }
     }
-}
 
     function removeImage() {
+        // Limpa o input de arquivo e esconde o preview da nova imagem
         document.getElementById('foto').value = "";
         document.getElementById('preview-container').style.display = "none";
+        document.getElementById('preview-image').src = "";
     }
 
-    function resetForm() {
-        document.getElementById('preview').classList.add('d-none');
-        document.getElementById('removeImage').classList.add('d-none');
-    }
+    // A função resetForm original pode não ser ideal aqui,
+    // pois limparia os dados preenchidos. Removemos ela ou
+    // podemos ajustá-la se necessário, mas por ora vamos omitir.
+
 </script>
 
 {% endblock %}

@@ -4,6 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
 from werkzeug.utils import secure_filename
+import os
+from flask import flash # Certifique-se que flash está importado
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave_secreta'
@@ -54,9 +56,18 @@ class Animal(db.Model):
             # Retorna URL de uma imagem placeholder se não houver foto
             return url_for('static', filename='images/placeholder_animal.png', _external=True) # Exemplo
 
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads', 'animais')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# Garanta que a pasta de upload exista
+# --- Configuração de Upload ---
+UPLOAD_FOLDER_BASE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+# Define especificamente a pasta para uploads de ADOTANTES
+UPLOAD_FOLDER_ADOTANTES = os.path.join(UPLOAD_FOLDER_BASE, 'adotantes')
+# Define a configuração que será usada pela rota
+app.config['UPLOAD_FOLDER_ADOTANTES'] = UPLOAD_FOLDER_ADOTANTES
+# Garante que a pasta exista
+os.makedirs(app.config['UPLOAD_FOLDER_ADOTANTES'], exist_ok=True)
+
+# (Manter também a configuração para animais, se necessário)
+UPLOAD_FOLDER_ANIMAIS = os.path.join(UPLOAD_FOLDER_BASE, 'animais')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_ANIMAIS # Ou outro nome de config
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 class Adotante(db.Model):
@@ -77,6 +88,20 @@ class Adotante(db.Model):
     tempo_sozinho = db.Column(db.Integer)
     quantidade_animais = db.Column(db.Integer)
     tipos_animais = db.Column(db.String(200))
+    foto_pessoal_filename = db.Column(db.String(255), nullable=True)
+    foto_local_filename = db.Column(db.String(255), nullable=True)
+    
+@property
+def foto_pessoal_url(self):
+    if self.foto_pessoal_filename:
+        return url_for('static', filename=f'uploads/adotantes/{self.foto_pessoal_filename}', _external=True)
+    return url_for('static', filename='images/placeholder_adotante.png', _external=True) # Placeholder pessoa
+
+@property
+def foto_local_url(self):
+    if self.foto_local_filename:
+        return url_for('static', filename=f'uploads/adotantes/{self.foto_local_filename}', _external=True)
+    return url_for('static', filename='images/placeholder_local.png', _external=True) # Placeholder local    
 
 def criar_admin():
     with app.app_context():
@@ -117,16 +142,10 @@ def logout():
     session.pop('admin', None)
     return redirect(url_for('login'))
 
-import os
-from werkzeug.utils import secure_filename
-from flask import flash # Certifique-se que flash está importado
-
 # ... (configuração do UPLOAD_FOLDER como mostrado anteriormente) ...
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/cadastrar_animal', methods=['GET', 'POST'])
 def cadastrar_animal():
@@ -420,61 +439,363 @@ def marcar_adotado(animal_id):
 
     return redirect(url_for('listar_animais'))
 
+# --- Rota para Marcar como Disponível ---
+@app.route('/marcar_disponivel/<int:animal_id>', methods=['POST'])
+def marcar_disponivel(animal_id):
+    if 'admin' not in session:
+        return redirect(url_for('login')) # Proteção: Apenas admin pode fazer isso
+
+    animal = Animal.query.get_or_404(animal_id) # Pega o animal ou retorna 404
+
+    # Verifica se o animal realmente estava adotado (opcional, mas boa prática)
+    if not animal.adotado:
+        flash(f'O animal "{animal.nome}" já está marcado como disponível.', 'info')
+        return redirect(url_for('listar_animais'))
+
+    try:
+        animal.adotado = False # Define o status como NÃO adotado
+        db.session.commit()
+        flash(f'Animal "{animal.nome}" marcado como disponível novamente!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao marcar o animal como disponível: {e}', 'danger')
+        # app.logger.error(f"Erro DB Mark Available: {e}") # Logar erro
+
+    return redirect(url_for('listar_animais')) # Redireciona de volta para a lista
+
+# --- Rota para Listar Adotantes ---
+@app.route('/listar_adotantes')
+def listar_adotantes():
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    try:
+        adotantes = Adotante.query.order_by(Adotante.nome_completo).all()
+    except Exception as e:
+        flash(f"Erro ao buscar adotantes: {e}", "danger")
+        adotantes = []
+    return render_template('listar_adotantes.html', adotantes=adotantes)
+
+# --- Rota para Cadastrar Adotante (GET e POST) ---
 @app.route('/cadastrar_adotante', methods=['GET', 'POST'])
 def cadastrar_adotante():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Encontre o maior ID existente e adicione 1
-    ultimo_adotante = Adotante.query.order_by(Adotante.id.desc()).first()
-    if ultimo_adotante:
-        proximo_id = ultimo_adotante.id + 1
-    else:
-        proximo_id = 0
-
     if request.method == 'POST':
-        nome_completo = request.form['nome_completo']
-        rg = request.form['rg']
-        cpf = request.form['cpf']
-        endereco = request.form['endereco']
-        bairro = request.form['bairro']
-        cidade = request.form['cidade']
-        cep = request.form['cep']
-        telefone = request.form['telefone']
-        email = request.form['email']
-        animal_interesse = request.form['animal_interesse']
-        tipo_animal_interesse = request.form['tipo_animal_interesse']
-        justificativa_adocao = request.form['justificativa_adocao']
-        tem_outros_animais = request.form['tem_outros_animais']
-        tempo_sozinho = request.form['tempo_sozinho']
-        quantidade_animais = request.form.get('quantidade_animais')
+        # --- Ler dados do formulário ---
+        nome_completo = request.form.get('nome_completo')
+        rg = request.form.get('rg')
+        cpf = request.form.get('cpf')
+        endereco = request.form.get('endereco')
+        bairro = request.form.get('bairro')
+        cidade = request.form.get('cidade')
+        cep = request.form.get('cep')
+        telefone = request.form.get('telefone')
+        email = request.form.get('email')
+        animal_interesse = request.form.get('animal_interesse')
+        tipo_animal_interesse = request.form.get('tipo_animal_interesse')
+        justificativa_adocao = request.form.get('justificativa_adocao')
+        tem_outros_animais = request.form.get('tem_outros_animais')
+        tempo_sozinho_str = request.form.get('tempo_sozinho')
+        quantidade_animais_str = request.form.get('quantidade_animais')
         tipos_animais = request.form.get('tipos_animais')
+        foto_pessoal = request.files.get('foto_pessoal')
+        foto_local = request.files.get('foto_local')
 
+        erros = []
+        # --- Validações (campos obrigatórios, etc.) ---
+        if not nome_completo: erros.append("Nome completo é obrigatório.")
+        if not rg: erros.append("RG é obrigatório.")
+        if not cpf: erros.append("CPF é obrigatório.")
+        # Adicione TODAS as outras validações necessárias aqui...
+
+        # --- Processar Foto Pessoal ---
+        foto_pessoal_filename_salvar = None
+        if foto_pessoal and foto_pessoal.filename != '':
+            if allowed_file(foto_pessoal.filename):
+                nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_pessoal.filename}")
+                caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro) # <-- USA A CONFIG CORRETA
+                
+                try:
+                    foto_pessoal.save(caminho)
+                    foto_pessoal_filename_salvar = nome_seguro
+                except Exception as e:
+                    erros.append(f"Erro ao salvar foto pessoal: {e}")
+            else:
+                erros.append('Tipo de arquivo não permitido para foto pessoal.')
+
+        # --- Processar Foto do Local ---
+        foto_local_filename_salvar = None
+        if foto_local and foto_local.filename != '':
+            if allowed_file(foto_local.filename):
+                nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_local.filename}")
+                
+                caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro) # <-- USA A CONFIG CORRETA
+                
+                try:
+                    foto_local.save(caminho)
+                    foto_local_filename_salvar = nome_seguro
+                except Exception as e:
+                    erros.append(f"Erro ao salvar foto do local: {e}")
+            else:
+                erros.append('Tipo de arquivo não permitido para foto do local.')
+
+        # --- Conversão de Tipos ---
+        tempo_sozinho = None
+        if tempo_sozinho_str:
+            try:
+                tempo_sozinho = int(tempo_sozinho_str)
+                if tempo_sozinho < 0: erros.append('Tempo sozinho não pode ser negativo.')
+            except ValueError:
+                erros.append('Tempo sozinho deve ser um número.')
+
+        quantidade_animais = None
+        if tem_outros_animais == 'Sim':
+             if quantidade_animais_str:
+                try:
+                    quantidade_animais = int(quantidade_animais_str)
+                    if quantidade_animais < 1: erros.append('Quantidade de animais deve ser pelo menos 1 se marcou "Sim".')
+                except ValueError:
+                     erros.append('Quantidade de animais deve ser um número.')
+             else:
+                 erros.append('Informe a quantidade de animais que possui.')
+        elif tem_outros_animais == 'Nao':
+            tipos_animais = None # Garante que tipos_animais seja nulo se não tiver outros
+
+        # --- Se houver erros, re-renderizar o formulário ---
+        if erros:
+            # Remover arquivos que podem ter sido salvos antes do erro
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar))
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar))
+            for erro in erros: flash(erro, 'danger')
+            # Re-renderiza o template. Idealmente, repassar os dados preenchidos (request.form)
+            return render_template('cadastrar_adotante.html', form_data=request.form)
+
+        # --- Se tudo ok, criar e salvar o objeto ---
         novo_adotante = Adotante(
-            nome_completo=nome_completo,
-            rg=rg,
-            cpf=cpf,
-            endereco=endereco,
-            bairro=bairro,
-            cidade=cidade,
-            cep=cep,
-            telefone=telefone,
-            email=email,
-            animal_interesse=animal_interesse,
-            tipo_animal_interesse=tipo_animal_interesse,
-            justificativa_adocao=justificativa_adocao,
-            tem_outros_animais=tem_outros_animais,
-            tempo_sozinho=tempo_sozinho,
-            quantidade_animais=quantidade_animais if quantidade_animais else None,
-            tipos_animais=tipos_animais if tipos_animais else None
+            nome_completo=nome_completo, rg=rg, cpf=cpf, endereco=endereco,
+            bairro=bairro, cidade=cidade, cep=cep, telefone=telefone, email=email,
+            animal_interesse=animal_interesse, tipo_animal_interesse=tipo_animal_interesse,
+            justificativa_adocao=justificativa_adocao, tem_outros_animais=tem_outros_animais,
+            tempo_sozinho=tempo_sozinho, quantidade_animais=quantidade_animais,
+            tipos_animais=tipos_animais,
+            foto_pessoal_filename=foto_pessoal_filename_salvar,
+            foto_local_filename=foto_local_filename_salvar
         )
 
-        db.session.add(novo_adotante)  # Corrija a indentação aqui
-        db.session.commit() # E aqui
-        flash('Adotante cadastrado com sucesso!', 'success')
-        return redirect(url_for('dashboard'))
+        try:
+            db.session.add(novo_adotante)
+            db.session.commit()
+            flash('Adotante cadastrado com sucesso!', 'success')
+            return redirect(url_for('listar_adotantes'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao cadastrar o adotante no banco de dados: {e}', 'danger')
+            app.logger.error(f"Erro DB Insert Adotante: {e}")
+            # Tenta remover as fotos salvas se o commit falhar
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar))
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar))
+            return render_template('cadastrar_adotante.html', form_data=request.form)
 
-    return render_template('cadastrar_adotante.html', proximo_id=proximo_id)
+    # --- Requisição GET ---
+    # A lógica do proximo_id foi removida pois o ID é autoincrementado pelo banco
+    return render_template('cadastrar_adotante.html')
+
+# --- Rota para Ver Detalhes do Adotante ---
+@app.route('/adotante/<int:adotante_id>')
+def detalhes_adotante(adotante_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    adotante = Adotante.query.get_or_404(adotante_id)
+    return render_template('detalhes_adotante.html', adotante=adotante)
+
+# --- Rota para Editar Adotante (GET - Mostrar formulário preenchido) ---
+@app.route('/editar_adotante/<int:adotante_id>', methods=['GET'])
+def editar_adotante_form(adotante_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    adotante = Adotante.query.get_or_404(adotante_id)
+    return render_template('editar_adotante.html', adotante=adotante)
+
+# --- Rota para Editar Adotante (POST - Processar formulário) ---
+@app.route('/editar_adotante/<int:adotante_id>', methods=['POST'])
+def editar_adotante_submit(adotante_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    adotante = Adotante.query.get_or_404(adotante_id)
+
+    # --- Ler dados do formulário ---
+    nome_completo = request.form.get('nome_completo')
+    rg = request.form.get('rg')
+    cpf = request.form.get('cpf')
+    endereco = request.form.get('endereco')
+    bairro = request.form.get('bairro')
+    cidade = request.form.get('cidade')
+    cep = request.form.get('cep')
+    telefone = request.form.get('telefone')
+    email = request.form.get('email')
+    animal_interesse = request.form.get('animal_interesse')
+    tipo_animal_interesse = request.form.get('tipo_animal_interesse')
+    justificativa_adocao = request.form.get('justificativa_adocao')
+    tem_outros_animais = request.form.get('tem_outros_animais')
+    tempo_sozinho_str = request.form.get('tempo_sozinho')
+    quantidade_animais_str = request.form.get('quantidade_animais')
+    tipos_animais = request.form.get('tipos_animais')
+    foto_pessoal_nova = request.files.get('foto_pessoal')
+    foto_local_nova = request.files.get('foto_local')
+
+    erros = []
+    # --- Validações ---
+    if not nome_completo: erros.append("Nome completo é obrigatório.")
+    # ... (adicione todas as outras validações) ...
+
+    # --- Processar Foto Pessoal (Substituição) ---
+    foto_pessoal_filename_atualizar = adotante.foto_pessoal_filename # Nome atual
+    nova_foto_pessoal_salva = False # Flag para controle de remoção em caso de erro de commit
+    if foto_pessoal_nova and foto_pessoal_nova.filename != '':
+        if allowed_file(foto_pessoal_nova.filename):
+            nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_pessoal_nova.filename}")
+            caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
+            try:
+                foto_pessoal_nova.save(caminho)
+                # Marca que nova foto foi salva e atualiza o nome a ser usado
+                nova_foto_pessoal_salva = True
+                foto_pessoal_filename_atualizar = nome_seguro
+            except Exception as e:
+                erros.append(f"Erro ao salvar nova foto pessoal: {e}")
+        else:
+            erros.append('Tipo de arquivo não permitido para foto pessoal.')
+
+    # --- Processar Foto do Local (Substituição) ---
+    foto_local_filename_atualizar = adotante.foto_local_filename # Nome atual
+    nova_foto_local_salva = False # Flag
+    if foto_local_nova and foto_local_nova.filename != '':
+        if allowed_file(foto_local_nova.filename):
+            nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_local_nova.filename}")
+            caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
+            try:
+                foto_local_nova.save(caminho)
+                nova_foto_local_salva = True
+                foto_local_filename_atualizar = nome_seguro
+            except Exception as e:
+                erros.append(f"Erro ao salvar nova foto do local: {e}")
+        else:
+            erros.append('Tipo de arquivo não permitido para foto do local.')
+
+    # --- Conversão de Tipos ---
+    tempo_sozinho = None
+    if tempo_sozinho_str:
+        try:
+            tempo_sozinho = int(tempo_sozinho_str)
+            if tempo_sozinho < 0: erros.append('Tempo sozinho não pode ser negativo.')
+        except ValueError:
+            erros.append('Tempo sozinho deve ser um número.')
+
+    quantidade_animais = None
+    if tem_outros_animais == 'Sim':
+        if quantidade_animais_str:
+            try:
+                quantidade_animais = int(quantidade_animais_str)
+                if quantidade_animais < 1: erros.append('Quantidade de animais deve ser pelo menos 1 se marcou "Sim".')
+            except ValueError:
+                 erros.append('Quantidade de animais deve ser um número.')
+        else:
+             erros.append('Informe a quantidade de animais que possui.')
+    elif tem_outros_animais == 'Nao':
+         tipos_animais = None
+
+    # --- Se houver erros, re-renderizar o formulário ---
+    if erros:
+        # NÃO removemos as fotos novas aqui, pois o usuário pode tentar corrigir
+        for erro in erros: flash(erro, 'danger')
+        return render_template('editar_adotante.html', adotante=adotante)
+
+    # --- Se não houver erros, atualizar os dados do objeto adotante ---
+    # Primeiro tenta remover as fotos antigas SE novas fotos foram salvas com sucesso
+    if nova_foto_pessoal_salva:
+        remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], adotante.foto_pessoal_filename))
+    if nova_foto_local_salva:
+         remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], adotante.foto_local_filename))
+
+    # Atualiza os atributos do objeto
+    adotante.nome_completo = nome_completo
+    adotante.rg = rg
+    adotante.cpf = cpf
+    adotante.endereco = endereco
+    adotante.bairro = bairro
+    adotante.cidade = cidade
+    adotante.cep = cep
+    adotante.telefone = telefone
+    adotante.email = email
+    adotante.animal_interesse = animal_interesse
+    adotante.tipo_animal_interesse = tipo_animal_interesse
+    adotante.justificativa_adocao = justificativa_adocao
+    adotante.tem_outros_animais = tem_outros_animais
+    adotante.tempo_sozinho = tempo_sozinho
+    adotante.foto_pessoal_filename = foto_pessoal_filename_atualizar # Salva nome novo ou antigo
+    adotante.foto_local_filename = foto_local_filename_atualizar   # Salva nome novo ou antigo
+
+    if tem_outros_animais == 'Sim':
+        adotante.quantidade_animais = quantidade_animais
+        adotante.tipos_animais = tipos_animais
+    else:
+        adotante.quantidade_animais = None
+        adotante.tipos_animais = None
+
+    # --- Tenta salvar as alterações no banco de dados ---
+    try:
+        db.session.commit()
+        flash(f'Dados de "{adotante.nome_completo}" atualizados com sucesso!', 'success')
+        return redirect(url_for('listar_adotantes'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao atualizar dados do adotante no banco de dados: {e}', 'danger')
+        app.logger.error(f"Erro DB Update Adotante {adotante.id}: {e}")
+
+        # Tenta remover as *novas* fotos que podem ter sido salvas se o commit falhar
+        if nova_foto_pessoal_salva:
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_atualizar))
+        if nova_foto_local_salva:
+            remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_atualizar))
+
+        return render_template('editar_adotante.html', adotante=adotante)
+
+
+# --- Rota para Excluir Adotante ---
+@app.route('/excluir_adotante/<int:adotante_id>', methods=['POST'])
+def excluir_adotante(adotante_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    adotante = Adotante.query.get_or_404(adotante_id)
+    # Guarda os nomes dos arquivos ANTES de deletar o objeto do banco
+    foto_pessoal_del = adotante.foto_pessoal_filename
+    foto_local_del = adotante.foto_local_filename
+    nome_adotante = adotante.nome_completo
+
+    try:
+        db.session.delete(adotante)
+        db.session.commit()
+
+        # Tenta remover os arquivos associados APÓS o commit bem sucedido
+        removido_pessoal = remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_del))
+        removido_local = remover_arquivo_se_existe(os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_del))
+
+        # Mensagem de sucesso (pode adicionar aviso se remoção de arquivo falhou)
+        msg = f'Adotante "{nome_adotante}" excluído com sucesso!'
+        cat = 'success'
+        if (foto_pessoal_del and not removido_pessoal) or (foto_local_del and not removido_local):
+             msg += " (Aviso: erro ao remover um ou mais arquivos de foto associados)."
+             cat = 'warning'
+        flash(msg, cat)
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir o adotante: {e}', 'danger')
+        app.logger.error(f"Erro DB Delete Adotante {adotante.id}: {e}")
+
+    return redirect(url_for('listar_adotantes'))
 
 if __name__ == '__main__':
     with app.app_context():

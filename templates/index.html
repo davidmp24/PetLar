@@ -43,23 +43,26 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <!-- Link para Listar Animais -->
-                        <a class="nav-link {{ 'active' if request.endpoint == 'listar_animais' else '' }}" href="{{ url_for('listar_animais') }}">
-                            <i class="fa-solid fa-dog fa-fw me-2"></i> Listar Animais
-                        </a>
-                    </li>
-                     <li class="nav-item">
                         <!-- Link para Cadastrar Novo Animal -->
                         <a class="nav-link {{ 'active' if request.endpoint == 'cadastrar_animal' else '' }}" href="{{ url_for('cadastrar_animal') }}">
                             <i class="fa-solid fa-circle-plus fa-fw me-2"></i> Cadastrar Animal
                         </a>
                     </li>
                     <li class="nav-item">
-                        <!-- Link para Cadastrar Adotante -->
-                        <a class="nav-link {{ 'active' if request.endpoint == 'cadastrar_adotante' else '' }}" href="{{ url_for('cadastrar_adotante') }}">
-                             <i class="fa-solid fa-file-signature fa-fw me-2"></i> Cadastrar Adotante
+                        <!-- Link para Listar Animais -->
+                        <a class="nav-link {{ 'active' if request.endpoint == 'listar_animais' else '' }}" href="{{ url_for('listar_animais') }}">
+                            <i class="fa-solid fa-dog fa-fw me-2"></i> Listar Animais
                         </a>
                     </li>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'cadastrar_adotante' else '' }}" href="{{ url_for('cadastrar_adotante') }}">
+                        <i class="fa-solid fa-file-signature fa-fw me-2"></i> Cadastrar Adotante
+                        </a>
+                    </li>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'listar_adotantes' else '' }}" href="{{ url_for('listar_adotantes') }}">
+                        <i class="fa-solid fa-address-book fa-fw me-2"></i> Listar Adotantes
+                        </a>
+                    </li>
+                    <li class="nav-item">
                      <!-- Adicionar aqui link para Listar Adotantes se/quando a rota existir -->
 
                     <hr class="sidebar-divider"> <!-- Mantendo divisor da base antiga -->
