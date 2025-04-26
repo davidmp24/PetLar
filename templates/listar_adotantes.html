@@ -20,6 +20,18 @@
             </a>
         </div>
 
+        {# Exibe mensagens flash (de sucesso, erro, etc.) se houver alguma #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {# Verifica se a lista de adotantes passada pela rota não está vazia #}
         {% if adotantes %}
             <div class="table-responsive"> {# Div para tornar a tabela rolável em telas pequenas #}
@@ -81,12 +93,12 @@
                                             <i class="fas fa-edit"></i> {# Ícone de lápis #}
                                         </a>
                                         {# Formulário para enviar a requisição de exclusão (método POST) #}
-                                        <form action="{{ url_for('excluir_adotante', adotante_id=adotante.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir {{ adotante.nome_completo }}?');">
+                                        <form action="{{ url_for('excluir_adotante', adotante_id=adotante.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir o cadastro de {{ adotante.nome_completo }}?');"> {# Mensagem de confirmação mais específica #}
                                             {# Botão de submit do formulário de exclusão #}
                                             <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
                                                 <i class="fas fa-trash"></i> {# Ícone de lixeira #}
                                             </button>
-                                            {# Adicionar input CSRF aqui se estiver usando Flask-WTF/CSRFProtect #}
+                                            {# Adicionar input CSRF aqui se estiver usando Flask-WTF/CSRFProtect: {{ form.csrf_token }} #}
                                         </form>
                                     </div>
                                 </td>

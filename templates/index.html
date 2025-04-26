@@ -58,12 +58,11 @@
                         <i class="fa-solid fa-file-signature fa-fw me-2"></i> Cadastrar Adotante
                         </a>
                     </li>
-                    <a class="nav-link {{ 'active' if request.endpoint == 'listar_adotantes' else '' }}" href="{{ url_for('listar_adotantes') }}">
-                        <i class="fa-solid fa-address-book fa-fw me-2"></i> Listar Adotantes
-                        </a>
-                    </li>
                     <li class="nav-item">
-                     <!-- Adicionar aqui link para Listar Adotantes se/quando a rota existir -->
+                        <a class="nav-link text-light {{ 'active bg-secondary rounded' if request.endpoint == 'listar_adotantes' else '' }}" href="{{ url_for('listar_adotantes') }}">
+                            <i class="fa-solid fa-address-book fa-fw me-2"></i> Listar Adotantes
+                       </a>
+                   </li>
 
                     <hr class="sidebar-divider"> <!-- Mantendo divisor da base antiga -->
 
