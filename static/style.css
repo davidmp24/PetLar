@@ -238,3 +238,100 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     }
     /* Você precisaria de um botão para mostrar/esconder a sidebar (ex: usando Offcanvas) */
 }
+
+/* === Estilos para Impressão === */
+@media print {
+
+    /* Esconder tudo por padrão */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Tornar a área imprimível e seus filhos visíveis */
+    .printable-area, .printable-area * {
+        visibility: visible;
+    }
+
+    /* Posicionar a área imprimível para ocupar a página */
+    .printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0 !important; /* Remover margens */
+        padding: 15px !important; /* Adicionar um pouco de padding para não colar nas bordas */
+        border: none !important; /* Remover borda do card */
+        box-shadow: none !important; /* Remover sombra do card */
+        background-color: white !important; /* Forçar fundo branco */
+        color: black !important; /* Forçar texto preto */
+        font-size: 10pt; /* Tamanho de fonte adequado para impressão */
+    }
+
+    /* Esconder especificamente elementos não desejados DENTRO da área imprimível */
+    .printable-area .action-buttons, /* Esconde a div dos botões que está DENTRO do detalhes_adotante */
+    .printable-area button,        /* Esconde outros botões se houver */
+    .printable-area a.btn         /* Esconde links com estilo de botão */
+     {
+        display: none !important; /* Garante que os botões não apareçam */
+    }
+
+    /* Ajustar elementos específicos para impressão */
+    .printable-area h3, .printable-area h4, .printable-area h5 {
+        color: black !important;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-size: 12pt; /* Ajuste tamanho dos títulos */
+    }
+     .printable-area h3 { font-size: 14pt; }
+
+    .printable-area p {
+        color: black !important;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+     .printable-area hr {
+        display: block; /* Garante que HR apareça se não escondido */
+        border-top: 1px solid #ccc !important; /* Cor clara para o divisor */
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    /* Forçar cores básicas para texto que pode ter classes de cor */
+    .printable-area .text-light,
+    .printable-area .text-info,
+    .printable-area .text-muted {
+        color: black !important;
+    }
+     .printable-area .badge {
+        border: 1px solid #ccc; /* Adiciona borda a badges */
+        color: black !important;
+        background-color: white !important;
+        padding: 0.2em 0.4em;
+        font-size: 9pt;
+     }
+
+    /* Ajustar imagens para impressão */
+    .printable-area img {
+        max-width: 90% !important; /* Limita largura da imagem na página */
+        max-height: 250px !important; /* Limita altura */
+        height: auto; /* Mantém proporção */
+        border: 1px solid #eee; /* Adiciona borda sutil */
+        page-break-inside: avoid; /* Tenta evitar que a imagem quebre entre páginas */
+        margin-bottom: 10px;
+    }
+
+     /* Esconde links que não são botões, se necessário (opcional) */
+     /*
+     .printable-area a:not(.btn) {
+         text-decoration: none;
+         color: black !important;
+     }
+     */
+
+    /* Evitar quebras de página dentro de seções se possível */
+    .printable-area .row > div {
+         page-break-inside: avoid;
+    }
+
+} /* Fim do @media print */

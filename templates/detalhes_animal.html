@@ -7,15 +7,21 @@
     <div class="card p-4 shadow-lg bg-dark text-light">
         <div class="row">
             <div class="col-md-4 text-center">
-                {% if animal.foto_filename %}
-                    <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
-                {% endif %}
-                 <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-edit me-1"></i> Editar</a>
-                 <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
+                <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-edit me-1"></i> Editar</a>
+                {# VVVVVV NOVO BOTÃO VVVVVV #}
+                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="window.print();">
+                   <i class="fas fa-print me-1"></i> Imprimir / Salvar
+               </button>
+                <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
+           
             </div>
             <div class="col-md-8">
+                <div class="col-md-8 printable-area">
+                {% if animal.foto_filename %}
+                    <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
+                    {% endif %}
                 <h3>{{ animal.nome }} {% if animal.adotado %}<span class="badge bg-secondary ms-2">Adotado</span>{% else %}<span class="badge bg-success ms-2">Disponível</span>{% endif %}</h3>
                 <hr>
                 <p><strong>ID:</strong> {{ animal.id }}</p>
