@@ -1,153 +1,257 @@
-{% extends 'index.html' %}
+{% extends 'index.html' %} {# Herda a estrutura base #}
 
+{# Define o título da aba do navegador #}
+{% block title %}Cadastrar Novo Animal - PetLar{% endblock %}
+
+{# Define o título principal da página #}
+{% block page_title %}Cadastrar Novo Animal{% endblock %}
+
+{# Bloco para adicionar CSS específico (para o mapa) #}
+{% block head_extra %}
+<style>
+    #map-container { height: 400px; width: 100%; margin-bottom: 15px; border: 1px solid #555; background-color: #444; } /* Estilo básico para o mapa */
+</style>
+{% endblock %}
+
+{# Bloco de conteúdo principal #}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center text-light">Cadastrar Novo Animal</h2>
-    <div class="card p-4 shadow-lg bg-dark text-light">
+<div class="container mt-5"> {# Container principal #}
+    <h2 class="text-center text-light">Cadastrar Novo Animal</h2> {# Título da página #}
+    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card estilizado #}
+
+        {# Formulário com método POST e enctype para upload de arquivos #}
         <form method="POST" enctype="multipart/form-data">
-          
-            <!-- Informações Básicas do Animal -->
+
+            <!-- Seção: Informações Básicas do Animal -->
             <h4 class="text-light">Informações Básicas</h4>
             <div class="row mb-3">
-                <div class="col-md-3">
-                    <label for="codigo_animal" class="form-label">Código</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="codigo_animal" name="codigo_animal" value="{{ codigo_animal }}" readonly>
-                </div>
-                <div class="col-md-9">
+                {# ID/Código (Removido - será gerado pelo banco) #}
+                <div class="col-md-12"> {# Campo Nome #}
                     <label for="nome" class="form-label">Nome</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom">
+                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom" value="{{ form_data.get('nome', '') if form_data else '' }}">
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Raça #}
                     <label for="raca" class="form-label">Raça</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata">
+                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata" value="{{ form_data.get('raca', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Espécie #}
                     <label for="especie" class="form-label">Espécie</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato">
+                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato" value="{{ form_data.get('especie', '') if form_data else '' }}">
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Sexo #}
                     <label for="sexo" class="form-label">Sexo</label>
                     <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option value="Macho">Macho</option>
-                        <option value="Fêmea">Fêmea</option>
+                        <option value="" disabled {% if not (form_data and form_data.get('sexo')) %}selected{% endif %}>Selecione</option>
+                        <option value="Macho" {% if form_data and form_data.get('sexo') == 'Macho' %}selected{% endif %}>Macho</option>
+                        <option value="Fêmea" {% if form_data and form_data.get('sexo') == 'Fêmea' %}selected{% endif %}>Fêmea</option>
                     </select>
                 </div>
-                <!-- Dentro do <form> em cadastrar_animal.html -->
-            <div class="mb-3">
-                <label for="descricao" class="form-label">Descrição</label>
-                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal..."></textarea>
-            </div>
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Idade #}
                     <label for="idade" class="form-label">Idade</label>
-                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2 anos">
+                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2 (anos)" value="{{ form_data.get('idade', '') if form_data else '' }}">
                 </div>
             </div>
-            
-            <!-- Características Comportamentais -->
+             <div class="mb-3"> {# Campo Descrição #}
+                <label for="descricao" class="form-label">Descrição Adicional</label>
+                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal...">{{ form_data.get('descricao', '') if form_data else '' }}</textarea>
+            </div>
+
+            <!-- Seção: Características Comportamentais -->
             <h4 class="text-light mt-4">Comportamento</h4>
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Temperamento #}
                     <label for="temperamento" class="form-label">Temperamento</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo">
+                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo, Agitado, Brincalhão" value="{{ form_data.get('temperamento', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Comportamento com Outros Animais #}
                     <label for="comportamento_outros" class="form-label">Com outros animais</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita cães">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Sociável, Dominante, Medroso" value="{{ form_data.get('comportamento_outros', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Comportamento com Crianças #}
                     <label for="comportamento_criancas" class="form-label">Com crianças</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca muito">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Bom, Necessita supervisão" value="{{ form_data.get('comportamento_criancas', '') if form_data else '' }}">
                 </div>
             </div>
-            
-            <!-- Histórico Médico -->
+
+            <!-- Seção: Histórico Médico -->
             <h4 class="text-light mt-4">Histórico Médico</h4>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Doenças Pré-existentes #}
                     <label for="doencas_preexistentes" class="form-label">Doenças</label>
-                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma"></textarea>
+                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma conhecida, Alergia a ...">{{ form_data.get('doencas_preexistentes', '') if form_data else '' }}</textarea>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Tratamentos #}
                     <label for="tratamentos" class="form-label">Tratamentos</label>
-                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Antibiótico"></textarea>
+                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Vermifugado, Castrado, Vacinas em dia">{{ form_data.get('tratamentos', '') if form_data else '' }}</textarea>
                 </div>
             </div>
-            
-            <!-- Aparência Física -->
+
+            <!-- Seção: Aparência Física -->
             <h4 class="text-light mt-4">Aparência</h4>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Cor #}
                     <label for="cor" class="form-label">Cor</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto">
+                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto, Branco, Caramelo" value="{{ form_data.get('cor', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Tamanho #}
                     <label for="tamanho" class="form-label">Tamanho</label>
-                    <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option value="Pequeno">Pequeno</option>
-                        <option value="Médio">Médio</option>
-                        <option value="Grande">Grande</option>
+                    <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho">
+                        <option value="" disabled {% if not (form_data and form_data.get('tamanho')) %}selected{% endif %}>Selecione</option>
+                        <option value="Pequeno" {% if form_data and form_data.get('tamanho') == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                        <option value="Médio" {% if form_data and form_data.get('tamanho') == 'Médio' %}selected{% endif %}>Médio</option>
+                        <option value="Grande" {% if form_data and form_data.get('tamanho') == 'Grande' %}selected{% endif %}>Grande</option>
                     </select>
                 </div>
             </div>
-            
-            <!-- Localização -->
-            <h4 class="text-light mt-4">Localização</h4>
+
+            <!-- Seção: Localização com Mapa -->
+            <h4 class="text-light mt-4">Localização Encontrado/Abrigo</h4>
+             {# Input para busca de endereço (Opcional) #}
             <div class="mb-3">
-                <label for="localizacao" class="form-label">Onde está?</label>
-                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" required placeholder="Ex: Bairro X, Cidade Y">
+                 <label for="address-search" class="form-label">Buscar Endereço no Mapa</label>
+                 <input type="text" id="address-search" class="form-control form-control-sm bg-secondary text-light" placeholder="Digite um endereço para centralizar o mapa">
             </div>
-            
-             <!-- Foto do Animal -->
+            {# Div onde o mapa será carregado #}
+            <div id="map-container">Carregando mapa...</div>
+            <small class="form-text text-muted mb-3 d-block">Clique no mapa para definir a localização ou arraste o marcador.</small>
+            {# Campo de texto original 'localizacao' (opcional, pode ser preenchido via JS) #}
+            <div class="mb-3">
+                <label for="localizacao" class="form-label">Endereço (Texto)</label>
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" placeholder="Ex: Rua Exemplo, 123 - Bairro" value="{{ form_data.get('localizacao', '') if form_data else '' }}">
+            </div>
+            {# Inputs ocultos para Latitude e Longitude #}
+            <input type="hidden" id="latitude" name="latitude" value="{{ form_data.get('latitude', '') if form_data else '' }}">
+            <input type="hidden" id="longitude" name="longitude" value="{{ form_data.get('longitude', '') if form_data else '' }}">
+
+
+            <!-- Seção: Foto do Animal -->
              <h4 class="text-light mt-4">Foto do Animal</h4>
              <div class="mb-3">
                  <label for="foto" class="form-label">Upload da Foto</label>
-                 <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewImage(event)">
+                 <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewSingleImage(event)"> {# Função JS para preview #}
              </div>
+             {# Container para o preview da imagem selecionada #}
              <div id="preview-container" class="mb-3" style="display: none;">
+                 <p>Preview:</p>
                  <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
-                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage()">Remover</button>
+                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeSingleImage()">Remover Foto</button> {# Função JS para remover #}
              </div>
- 
-             <div class="d-flex justify-content-between">
-                <button type="submit" class="btn btn-primary">Cadastrar Animal</button>
-                <button type="reset" class="btn btn-secondary" onclick="resetForm()">Limpar</button>
+
+             <!-- Botões de Ação -->
+             <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Cadastrar Animal</button>
+                <button type="reset" class="btn btn-secondary" onclick="resetAnimalForm()"><i class="fas fa-eraser me-1"></i> Limpar</button> {# Chama JS de reset #}
             </div>
-        </form>
-    </div>
-</div>
+        </form> {# Fim do formulário #}
+    </div> {# Fim do card #}
+</div> {# Fim do container #}
+
+{# Bloco de Scripts JS #}
+{% block scripts %}
 <script>
-    function previewImage(event) {
+    // --- Funções para Preview e Remoção de Imagem (Única) ---
+    function previewSingleImage(event) {
         const input = event.target;
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
-
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.style.display = "block";
-        };
-
-        reader.readAsDataURL(input.files[0]);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { previewImage.src = e.target.result; previewContainer.style.display = "block"; };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+             previewContainer.style.display = "none"; previewImage.src = "";
+        }
     }
-}
-
-    function removeImage() {
+    function removeSingleImage() {
         document.getElementById('foto').value = "";
+        document.getElementById('preview-image').src = "";
         document.getElementById('preview-container').style.display = "none";
     }
-
-    function resetForm() {
-        document.getElementById('preview').classList.add('d-none');
-        document.getElementById('removeImage').classList.add('d-none');
+    // Função para o botão Limpar
+    function resetAnimalForm() {
+        removeSingleImage(); // Limpa o preview da imagem
+        // Limpa os campos de localização e reseta o mapa (se o mapa e marcador estiverem definidos)
+        document.getElementById('localizacao').value = '';
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+        if (typeof map !== 'undefined' && map) {
+            const defaultCenter = { lat: -14.2350, lng: -51.9253 }; // Centro do Brasil
+            map.setCenter(defaultCenter);
+            map.setZoom(4);
+            if (typeof marker !== 'undefined' && marker) {
+                marker.setMap(null); // Remove o marcador do mapa
+            }
+        }
+        // A limpeza dos outros campos é feita pelo type="reset"
     }
-</script>
 
-{% endblock %}
+    // --- Funções do Google Maps ---
+    let map;
+    let marker;
+    // Tenta pegar coordenadas do form_data (se houver erro de validação), senão usa default
+    const initialLat = parseFloat("{{ form_data.get('latitude', -14.2350) if form_data else -14.2350 }}");
+    const initialLng = parseFloat("{{ form_data.get('longitude', -51.9253) if form_data else -51.9253 }}");
+    const initialZoom = (initialLat !== -14.2350) ? 15 : 4;
+
+    function initMap() {
+        const initialPosition = { lat: initialLat, lng: initialLng };
+        map = new google.maps.Map(document.getElementById("map-container"), {
+            center: initialPosition, zoom: initialZoom, mapTypeControl: false, streetViewControl: false
+        });
+        // Cria o marcador apenas se as coordenadas iniciais forem válidas (não o default)
+        if (initialLat !== -14.2350 || initialLng !== -51.9253) {
+             marker = new google.maps.Marker({ position: initialPosition, map: map, draggable: true, title: "Localização do animal" });
+             marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
+        } else {
+             marker = null; // Inicializa como nulo
+        }
+        map.addListener("click", (event) => placeMarker(event.latLng));
+
+        // Lógica da Busca de Endereço
+        const searchInput = document.getElementById("address-search");
+        const searchBox = new google.maps.places.SearchBox(searchInput);
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) { return; }
+            const place = places[0];
+            if (!place.geometry || !place.geometry.location) { return; }
+            map.setCenter(place.geometry.location);
+            map.setZoom(16);
+            placeMarker(place.geometry.location); // Coloca/move o marcador
+            document.getElementById('localizacao').value = searchInput.value; // Atualiza campo texto
+         });
+    }
+
+    function placeMarker(location) {
+         if (!marker) { // Cria o marcador se ele não existir ainda
+              marker = new google.maps.Marker({ position: location, map: map, draggable: true, title: "Localização do animal" });
+              marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
+         } else {
+              marker.setMap(map); // Garante que está visível
+              marker.setPosition(location); // Move para a nova posição
+         }
+         updateCoordinates(location); // Atualiza campos ocultos e texto
+    }
+
+    function updateCoordinates(location) {
+        document.getElementById('latitude').value = location.lat();
+        document.getElementById('longitude').value = location.lng();
+        // Geocoding reverso opcional
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: location })
+            .then((response) => { if (response.results[0]) { document.getElementById('localizacao').value = response.results[0].formatted_address; }})
+            .catch((e) => console.log("Geocoder falhou: " + e));
+    }
+
+</script>
+{# Carrega a API do Google Maps - SUBSTITUA SUA_CHAVE_DE_API #}
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&loading=async&libraries=places&callback=initMap">
+</script>
+{% endblock %} {# Fim do Bloco Scripts #}
+
+{% endblock %} {# Fim do Bloco Content #}

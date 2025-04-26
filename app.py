@@ -38,6 +38,8 @@ class Animal(db.Model):
     localizacao = db.Column(db.String(255), nullable=True)
     descricao = db.Column(db.Text, nullable=True)
     foto_filename = db.Column(db.String(255), nullable=True) # Nome do arquivo da foto
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
 
     # --- Outros Campos ---
     adotado = db.Column(db.Boolean, default=False)
@@ -170,13 +172,8 @@ def cadastrar_animal():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Código do animal pode ser derivado do ID após salvar, ou gerado aqui se necessário
-    # Se for para exibir no GET, calcule aqui:
-    # ultimo_animal = Animal.query.order_by(Animal.id.desc()).first()
-    # codigo_para_exibir = (ultimo_animal.id + 1) if ultimo_animal else 1
-
     if request.method == 'POST':
-        # --- Ler dados do formulário (usando .get()) ---
+        # --- Ler dados do formulário ---
         nome = request.form.get('nome')
         especie = request.form.get('especie')
         raca = request.form.get('raca')
@@ -189,55 +186,75 @@ def cadastrar_animal():
         tratamentos = request.form.get('tratamentos')
         cor = request.form.get('cor')
         tamanho = request.form.get('tamanho')
-        localizacao = request.form.get('localizacao')
+        localizacao_texto = request.form.get('localizacao') # Renomeado para clareza
         descricao = request.form.get('descricao')
         foto = request.files.get('foto')
+        latitude_str = request.form.get('latitude')
+        longitude_str = request.form.get('longitude')
 
-        # --- Validação Básica (Exemplo) ---
+        # Inicializa lista de erros
         erros = []
-        if not nome:
-            erros.append('O nome do animal é obrigatório.')
-        if not especie:
-            erros.append('A espécie do animal é obrigatória.')
-        # Adicione mais validações conforme necessário
 
-        # --- Conversão de Idade ---
+        # --- Validações de Campos Obrigatórios ---
+        if not nome: erros.append('O nome do animal é obrigatório.')
+        if not especie: erros.append('A espécie do animal é obrigatória.')
+        # Adicione outras validações obrigatórias (sexo, tamanho?)
+
+        # --- Conversão e Validação de Idade ---
         idade = None
-        if idade_str:
+        if idade_str: # Só converte se algo foi digitado
             try:
                 idade = int(idade_str)
                 if idade < 0:
                     erros.append('A idade não pode ser negativa.')
             except ValueError:
-                erros.append('A idade deve ser um número.')
+                erros.append('A idade deve ser um número válido.')
+
+        # --- Conversão e Validação de Coordenadas ---
+        latitude = None
+        longitude = None
+        if latitude_str or longitude_str: # Processa se pelo menos um foi enviado
+            if not latitude_str or not longitude_str:
+                 erros.append("Latitude e Longitude devem ser fornecidas juntas.")
+            else:
+                try:
+                    latitude = float(latitude_str)
+                    longitude = float(longitude_str)
+                    if not (-90 <= latitude <= 90): erros.append("Latitude inválida (deve ser entre -90 e 90).")
+                    if not (-180 <= longitude <= 180): erros.append("Longitude inválida (deve ser entre -180 e 180).")
+                except (ValueError, TypeError):
+                     erros.append("Latitude e Longitude devem ser números válidos.")
 
         # --- Tratamento da Foto ---
-        foto_filename = None
+        foto_filename_salvar = None # Inicializa como None
         if foto and foto.filename != '':
             if allowed_file(foto.filename):
-                # Gera um nome de arquivo seguro para evitar conflitos/ataques
-                foto_filename = secure_filename(f"{uuid.uuid4()}_{foto.filename}") # Adiciona UUID para unicidade
-                foto_path = os.path.join(app.config['UPLOAD_FOLDER'], foto_filename)
+                nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto.filename}")
+                # Certifique-se de usar a pasta correta para ANIMAIS
+                caminho = os.path.join(app.config['UPLOAD_FOLDER'], nome_seguro) # UPLOAD_FOLDER para animais
                 try:
-                    foto.save(foto_path)
+                    foto.save(caminho)
+                    foto_filename_salvar = nome_seguro # Guarda nome apenas se salvou
                 except Exception as e:
                     erros.append(f"Erro ao salvar a foto: {e}")
-                    foto_filename = None # Não salva o nome do arquivo se houve erro
+                    app.logger.error(f"Erro ao salvar foto do animal: {e}")
             else:
                 erros.append('Tipo de arquivo de foto não permitido.')
 
-        # --- Se houver erros, re-renderizar o formulário ---
+        # --- Se houver erros (validação, conversão ou upload), re-renderizar ---
         if erros:
+            # Tenta remover o arquivo de foto que pode ter sido salvo antes do erro
+            remover_arquivo_se_existe(app.config['UPLOAD_FOLDER'], foto_filename_salvar)
+
             for erro in erros:
                 flash(erro, 'danger')
-            # Recalcular codigo_para_exibir se necessário para re-renderizar
-            # ultimo_animal = Animal.query.order_by(Animal.id.desc()).first()
-            # codigo_para_exibir = (ultimo_animal.id + 1) if ultimo_animal else 1
-            # É importante repassar os dados que o usuário já digitou de volta para o template
-            # usando o argumento 'value' nos inputs ou usando Flask-WTF que faz isso automaticamente.
-            return render_template('cadastrar_animal.html') # codigo_animal=codigo_para_exibir)
+
+            # Re-renderiza passando os dados do formulário de volta
+            # CORREÇÃO: Usando keyword arguments corretamente
+            return render_template('cadastrar_animal.html', form_data=request.form)
 
         # --- Se tudo ok, criar e salvar o objeto ---
+        # Removida lógica 'is_creating' / 'else' que era da edição
         novo_animal = Animal(
             nome=nome,
             especie=especie,
@@ -251,38 +268,37 @@ def cadastrar_animal():
             tratamentos=tratamentos,
             cor=cor,
             tamanho=tamanho,
-            localizacao=localizacao,
+            localizacao=localizacao_texto, # Usando a variável renomeada
             descricao=descricao,
-            foto_filename=foto_filename # Salva o nome do arquivo da foto
-            # 'adotado' e 'data_cadastro' terão valores padrão
+            foto_filename=foto_filename_salvar, # Nome do arquivo salvo ou None
+            latitude=latitude,                  # Coordenada salva ou None
+            longitude=longitude                 # Coordenada salva ou None
+            # 'adotado' e 'data_cadastro' terão valores padrão definidos no modelo
         )
 
         try:
             db.session.add(novo_animal)
             db.session.commit()
             flash(f'Animal "{novo_animal.nome}" cadastrado com sucesso!', 'success')
+            # Redireciona para a lista de animais após sucesso
             return redirect(url_for('listar_animais'))
 
         except Exception as e:
-            db.session.rollback()
-            flash(f'Erro ao salvar no banco de dados: {e}', 'danger')
-            # app.logger.error(f"Erro DB: {e}") # Logar erro é bom
+            db.session.rollback() # Desfaz a tentativa de commit
+            flash(f'Erro ao salvar o animal no banco de dados: {e}', 'danger')
+            app.logger.error(f"Erro DB Insert Animal: {e}")
+
             # Tenta remover a foto salva se o commit falhar
-            if foto_filename:
-                 try:
-                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], foto_filename))
-                 except OSError:
-                     pass # Ignora erro se não conseguir remover
-            # Recalcular codigo_para_exibir se necessário
-            # ultimo_animal = Animal.query.order_by(Animal.id.desc()).first()
-            # codigo_para_exibir = (ultimo_animal.id + 1) if ultimo_animal else 1
-            return render_template('cadastrar_animal.html') #, codigo_animal=codigo_para_exibir)
+            remover_arquivo_se_existe(app.config['UPLOAD_FOLDER'], foto_filename_salvar)
+
+            # Re-renderiza com os dados do formulário
+            # CORREÇÃO: Usando keyword arguments corretamente
+            return render_template('cadastrar_animal.html', form_data=request.form)
 
     # --- Requisição GET ---
-    # Calcular codigo_para_exibir se necessário para o GET
-    # ultimo_animal = Animal.query.order_by(Animal.id.desc()).first()
-    # codigo_para_exibir = (ultimo_animal.id + 1) if ultimo_animal else 1
-    return render_template('cadastrar_animal.html') #, codigo_animal=codigo_para_exibir)
+    # Renderiza o formulário vazio
+    # CORREÇÃO: Passando form_data=None explicitamente
+    return render_template('cadastrar_animal.html', form_data=None)
 
 @app.route('/listar_animais')
 def listar_animais():

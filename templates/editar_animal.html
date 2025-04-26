@@ -1,192 +1,256 @@
-{% extends 'index.html' %}
+{% extends 'index.html' %} {# Herda a estrutura base #}
 
-{% block title %}Editar {{ animal.nome or 'Animal' }} - PetLar{% endblock %}
+{# Define o título da aba do navegador #}
+{% block title %}Editar Animal: {{ animal.nome }} - PetLar{% endblock %}
 
+{# Define o título principal da página #}
 {% block page_title %}Editar Animal{% endblock %}
 
+{# Bloco para adicionar CSS específico (para o mapa) #}
+{% block head_extra %}
+<style>
+    #map-container { height: 400px; width: 100%; margin-bottom: 15px; border: 1px solid #555; background-color: #444; } /* Estilo básico para o mapa */
+</style>
+{% endblock %}
+
+{# Bloco de conteúdo principal #}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center text-light">Editar Animal: {{ animal.nome }}</h2>
-    <div class="card p-4 shadow-lg bg-dark text-light">
+<div class="container mt-5"> {# Container principal #}
+    <h2 class="text-center text-light">Editar Animal: {{ animal.nome }}</h2> {# Título da página #}
+    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card estilizado #}
+
+        {# Formulário com método POST, action para a rota de submit da edição e enctype para upload de arquivos #}
         <form method="POST" action="{{ url_for('editar_animal_submit', animal_id=animal.id) }}" enctype="multipart/form-data">
 
-            <!-- Informações Básicas do Animal -->
+            <!-- Seção: Informações Básicas do Animal -->
             <h4 class="text-light">Informações Básicas</h4>
-            <div class="row mb-3">
-                <div class="col-md-3">
+             <div class="row mb-3">
+                 <div class="col-md-3"> {# Campo ID (Apenas Exibição) #}
                     <label for="animal_id" class="form-label">ID</label>
-                    {# O ID do animal é imutável, então apenas exibimos #}
                     <input type="text" class="form-control bg-secondary text-light" id="animal_id" name="animal_id" value="{{ animal.id }}" readonly>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-9"> {# Campo Nome #}
                     <label for="nome" class="form-label">Nome</label>
-                    {# Preenche o campo nome com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom" value="{{ animal.nome or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required value="{{ animal.nome or '' }}"> {# Preenche com valor existente #}
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Raça #}
                     <label for="raca" class="form-label">Raça</label>
-                    {# Preenche o campo raça com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata" value="{{ animal.raca or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" value="{{ animal.raca or '' }}"> {# Preenche com valor existente #}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Espécie #}
                     <label for="especie" class="form-label">Espécie</label>
-                    {# Preenche o campo especie com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato" value="{{ animal.especie or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required value="{{ animal.especie or '' }}"> {# Preenche com valor existente #}
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Sexo #}
                     <label for="sexo" class="form-label">Sexo</label>
-                    {# Seleciona a opção correspondente ao valor atual #}
                     <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
                         <option value="" disabled {% if not animal.sexo %}selected{% endif %}>Selecione</option>
                         <option value="Macho" {% if animal.sexo == 'Macho' %}selected{% endif %}>Macho</option>
                         <option value="Fêmea" {% if animal.sexo == 'Fêmea' %}selected{% endif %}>Fêmea</option>
-                    </select>
+                    </select> {# Seleciona opção existente #}
                 </div>
-                 <div class="col-md-6">
+                <div class="col-md-6"> {# Campo Idade #}
                     <label for="idade" class="form-label">Idade</label>
-                    {# Preenche o campo idade com o valor atual, tratando None #}
-                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2" value="{{ animal.idade if animal.idade is not none else '' }}">
-                     <small class="form-text text-muted">Idade em anos/meses.</small>
+                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" value="{{ animal.idade if animal.idade is not none else '' }}"> {# Preenche com valor existente #}
                 </div>
             </div>
-
-            <!-- Descrição (Movido para seção própria) -->
-            <h4 class="text-light mt-4">Descrição</h4>
-             <div class="mb-3">
-                <label for="descricao" class="form-label">Observações sobre o animal</label>
-                {# Preenche a textarea com o valor atual #}
-                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal...">{{ animal.descricao or '' }}</textarea>
+             <div class="mb-3"> {# Campo Descrição #}
+                <label for="descricao" class="form-label">Descrição Adicional</label>
+                <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3">{{ animal.descricao or '' }}</textarea> {# Preenche com valor existente #}
             </div>
 
-            <!-- Características Comportamentais -->
+            <!-- Seção: Características Comportamentais -->
             <h4 class="text-light mt-4">Comportamento</h4>
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Temperamento #}
                     <label for="temperamento" class="form-label">Temperamento</label>
-                    {# Preenche o campo temperamento com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo" value="{{ animal.temperamento or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" value="{{ animal.temperamento or '' }}"> {# Preenche com valor existente #}
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Comportamento com Outros Animais #}
                     <label for="comportamento_outros" class="form-label">Com outros animais</label>
-                    {# Preenche o campo comportamento_outros com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Aceita cães" value="{{ animal.comportamento_outros or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" value="{{ animal.comportamento_outros or '' }}"> {# Preenche com valor existente #}
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 mb-3"> {# Campo Comportamento com Crianças #}
                     <label for="comportamento_criancas" class="form-label">Com crianças</label>
-                    {# Preenche o campo comportamento_criancas com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Brinca muito" value="{{ animal.comportamento_criancas or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" value="{{ animal.comportamento_criancas or '' }}"> {# Preenche com valor existente #}
                 </div>
             </div>
 
-            <!-- Histórico Médico -->
+            <!-- Seção: Histórico Médico -->
             <h4 class="text-light mt-4">Histórico Médico</h4>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Doenças Pré-existentes #}
                     <label for="doencas_preexistentes" class="form-label">Doenças</label>
-                    {# Preenche a textarea com o valor atual #}
-                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma">{{ animal.doencas_preexistentes or '' }}</textarea>
+                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2">{{ animal.doencas_preexistentes or '' }}</textarea> {# Preenche com valor existente #}
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Tratamentos #}
                     <label for="tratamentos" class="form-label">Tratamentos</label>
-                     {# Preenche a textarea com o valor atual #}
-                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Antibiótico">{{ animal.tratamentos or '' }}</textarea>
+                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2">{{ animal.tratamentos or '' }}</textarea> {# Preenche com valor existente #}
                 </div>
             </div>
 
-            <!-- Aparência Física -->
+            <!-- Seção: Aparência Física -->
             <h4 class="text-light mt-4">Aparência</h4>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Cor #}
                     <label for="cor" class="form-label">Cor</label>
-                    {# Preenche o campo cor com o valor atual #}
-                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto" value="{{ animal.cor or '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" value="{{ animal.cor or '' }}"> {# Preenche com valor existente #}
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3"> {# Campo Tamanho #}
                     <label for="tamanho" class="form-label">Tamanho</label>
-                    {# Seleciona a opção correspondente ao valor atual #}
                     <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho">
                         <option value="" disabled {% if not animal.tamanho %}selected{% endif %}>Selecione</option>
                         <option value="Pequeno" {% if animal.tamanho == 'Pequeno' %}selected{% endif %}>Pequeno</option>
                         <option value="Médio" {% if animal.tamanho == 'Médio' %}selected{% endif %}>Médio</option>
                         <option value="Grande" {% if animal.tamanho == 'Grande' %}selected{% endif %}>Grande</option>
-                    </select>
+                    </select> {# Seleciona opção existente #}
                 </div>
             </div>
 
-            <!-- Localização -->
-            <h4 class="text-light mt-4">Localização</h4>
+            <!-- Seção: Localização com Mapa -->
+            <h4 class="text-light mt-4">Localização Encontrado/Abrigo</h4>
+             {# Input para busca de endereço (Opcional) #}
             <div class="mb-3">
-                <label for="localizacao" class="form-label">Onde está?</label>
-                {# Preenche o campo localizacao com o valor atual #}
-                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" placeholder="Ex: Bairro X, Cidade Y" value="{{ animal.localizacao or '' }}">
+                 <label for="address-search" class="form-label">Buscar Endereço no Mapa</label>
+                 <input type="text" id="address-search" class="form-control form-control-sm bg-secondary text-light" placeholder="Digite um endereço para centralizar o mapa">
             </div>
+            {# Div onde o mapa será carregado #}
+            <div id="map-container">Carregando mapa...</div>
+            <small class="form-text text-muted mb-3 d-block">Clique no mapa para definir a localização ou arraste o marcador.</small>
+            {# Campo de texto original 'localizacao' (opcional, pode ser preenchido via JS) #}
+            <div class="mb-3">
+                <label for="localizacao" class="form-label">Endereço (Texto)</label>
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" value="{{ animal.localizacao or '' }}"> {# Preenche com valor existente #}
+            </div>
+            {# Inputs ocultos para Latitude e Longitude #}
+            <input type="hidden" id="latitude" name="latitude" value="{{ animal.latitude if animal.latitude is not none else '' }}"> {# Preenche com valor existente #}
+            <input type="hidden" id="longitude" name="longitude" value="{{ animal.longitude if animal.longitude is not none else '' }}"> {# Preenche com valor existente #}
 
-             <!-- Foto do Animal -->
+
+            <!-- Seção: Foto do Animal -->
              <h4 class="text-light mt-4">Foto do Animal</h4>
-            {% if animal.foto_filename %}
-            <div class="mb-2">
-                <p>Foto Atual:</p>
-                <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
-            </div>
-            {% endif %}
-            <div class="mb-3">
-                <label for="foto" class="form-label">{% if animal.foto_filename %}Substituir Foto{% else %}Upload da Foto{% endif %}</label>
-                <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewImage(event)">
-                <small class="form-text text-muted">Deixe em branco para manter a foto atual (se houver).</small>
-            </div>
-            <!-- Preview da NOVA imagem (opcional) -->
-            <div id="preview-container" class="mb-3" style="display: none;">
-                <p>Nova Foto (Preview):</p>
-                <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
-                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeImage()">Remover Nova Foto</button>
-            </div>
+             {# Exibe a foto atual se existir #}
+             {% if animal.foto_filename %}
+             <div class="mb-2">
+                 <p>Foto Atual:</p>
+                 <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+             </div>
+             {% endif %}
+             <div class="mb-3">
+                 {# O label muda se já existe foto #}
+                 <label for="foto" class="form-label">{% if animal.foto_filename %}Substituir Foto{% else %}Upload da Foto{% endif %}</label>
+                 <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewSingleImage(event)">
+                 {# Adiciona dica se já existe foto #}
+                 {% if animal.foto_filename %}
+                    <small class="form-text text-muted">Deixe em branco para manter a foto atual.</small>
+                 {% endif %}
+             </div>
+             {# Container para o preview da NOVA imagem selecionada #}
+             <div id="preview-container" class="mb-3" style="display: none;">
+                 <p>Nova Foto (Preview):</p>
+                 <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeSingleImage()">Remover Nova Foto</button>
+             </div>
 
+             <!-- Botões de Ação -->
              <div class="d-flex justify-content-between mt-4">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar Alterações</button>
                 <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
             </div>
-        </form>
-    </div>
-</div>
+        </form> {# Fim do formulário #}
+    </div> {# Fim do card #}
+</div> {# Fim do container #}
 
-{# Incluir o mesmo script de preview de imagem usado no cadastro #}
+{# Bloco de Scripts JS #}
+{% block scripts %}
 <script>
-    function previewImage(event) {
+    // --- Funções para Preview e Remoção de Imagem (Única) ---
+    function previewSingleImage(event) {
         const input = event.target;
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
-
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                previewContainer.style.display = "block";
-            };
-
+            reader.onload = function(e) { previewImage.src = e.target.result; previewContainer.style.display = "block"; };
             reader.readAsDataURL(input.files[0]);
         } else {
-            // Esconde o preview se nenhum arquivo for selecionado
-             previewContainer.style.display = "none";
-             previewImage.src = "";
+             previewContainer.style.display = "none"; previewImage.src = "";
         }
     }
-
-    function removeImage() {
-        // Limpa o input de arquivo e esconde o preview da nova imagem
+    function removeSingleImage() {
         document.getElementById('foto').value = "";
-        document.getElementById('preview-container').style.display = "none";
         document.getElementById('preview-image').src = "";
+        document.getElementById('preview-container').style.display = "none";
+    }
+    // A função resetForm não é usada aqui, pois é um formulário de edição
+
+    // --- Funções do Google Maps ---
+    let map;
+    let marker;
+    // Pega coordenadas iniciais do animal existente (ou default se não houver)
+    const initialLat = parseFloat(document.getElementById('latitude').value) || -14.2350;
+    const initialLng = parseFloat(document.getElementById('longitude').value) || -51.9253;
+    const initialZoom = (initialLat !== -14.2350) ? 15 : 4;
+
+    function initMap() {
+        const initialPosition = { lat: initialLat, lng: initialLng };
+        map = new google.maps.Map(document.getElementById("map-container"), {
+            center: initialPosition, zoom: initialZoom, mapTypeControl: false, streetViewControl: false
+        });
+        // Cria o marcador APENAS se as coordenadas iniciais forem válidas
+        if (initialLat !== -14.2350 || initialLng !== -51.9253) {
+             marker = new google.maps.Marker({ position: initialPosition, map: map, draggable: true, title: "Localização do animal" });
+             marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
+        } else {
+            marker = null; // Inicializa como nulo se não houver coords
+        }
+        map.addListener("click", (event) => placeMarker(event.latLng));
+
+        // Lógica da Busca de Endereço
+        const searchInput = document.getElementById("address-search");
+        const searchBox = new google.maps.places.SearchBox(searchInput);
+        searchBox.addListener("places_changed", () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) { return; }
+            const place = places[0];
+            if (!place.geometry || !place.geometry.location) { return; }
+            map.setCenter(place.geometry.location);
+            map.setZoom(16);
+            placeMarker(place.geometry.location);
+            document.getElementById('localizacao').value = searchInput.value; // Atualiza campo texto
+         });
     }
 
-    // A função resetForm original pode não ser ideal aqui,
-    // pois limparia os dados preenchidos. Removemos ela ou
-    // podemos ajustá-la se necessário, mas por ora vamos omitir.
+    function placeMarker(location) {
+         if (!marker) { // Cria marcador se não existir
+              marker = new google.maps.Marker({ position: location, map: map, draggable: true, title: "Localização do animal" });
+              marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
+         } else { // Move marcador existente
+              marker.setMap(map);
+              marker.setPosition(location);
+         }
+         updateCoordinates(location);
+    }
+
+    function updateCoordinates(location) {
+        document.getElementById('latitude').value = location.lat();
+        document.getElementById('longitude').value = location.lng();
+        // Geocoding reverso opcional
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: location })
+            .then((response) => { if (response.results[0]) { document.getElementById('localizacao').value = response.results[0].formatted_address; }})
+            .catch((e) => console.log("Geocoder falhou: " + e));
+    }
 
 </script>
+{# Carrega a API do Google Maps - SUBSTITUA SUA_CHAVE_DE_API #}
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&loading=async&libraries=places&callback=initMap">
+</script>
+{% endblock %} {# Fim do Bloco Scripts #}
 
-{% endblock %}
+{% endblock %} {# Fim do Bloco Content #}
