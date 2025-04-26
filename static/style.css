@@ -335,3 +335,17 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     }
 
 } /* Fim do @media print */
+
+.skip-link {
+    position: absolute;
+    top: -40px; /* Ou qualquer valor que o esconda fora da tela */
+    left: 0;
+    background: #eee;
+    color: #333;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s ease-in-out;
+}
+.skip-link:focus {
+    top: 0; /* Traz para a tela quando recebe foco */
+}
