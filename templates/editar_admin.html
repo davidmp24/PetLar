@@ -1,0 +1,32 @@
+{% extends 'index.html' %}
+{% block title %}Editar Administrador - PetLar{% endblock %}
+{% block page_title %}Editar Administrador{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-light">Editar Senha do Administrador</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light mx-auto" style="max-width: 500px;"> {# Centralizado #}
+        <form method="POST" action="{{ url_for('editar_admin_submit', admin_id=admin.id) }}">
+             <div class="mb-3">
+                <label class="form-label">Nome de Usuário</label>
+                {# Exibe o username, mas não permite edição direta aqui #}
+                <input type="text" class="form-control bg-secondary text-light" value="{{ admin.username }}" readonly>
+            </div>
+            <hr class="border-light">
+            <p class="text-info">Preencha os campos abaixo apenas se desejar alterar a senha.</p>
+            <div class="mb-3">
+                <label for="new_password" class="form-label">Nova Senha</label>
+                <input type="password" class="form-control bg-secondary text-light" id="new_password" name="new_password" placeholder="Deixe em branco para não alterar">
+            </div>
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirmar Nova Senha</label>
+                <input type="password" class="form-control bg-secondary text-light" id="confirm_password" name="confirm_password" placeholder="Deixe em branco para não alterar">
+            </div>
+             <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Atualizar Senha</button>
+                <a href="{{ url_for('listar_admins') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

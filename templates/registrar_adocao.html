@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% block title %}Registrar Adoção - PetLar{% endblock %}
+{% block page_title %}Registrar Adoção{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center text-light">Registrar Adoção</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light mx-auto" style="max-width: 600px;">
+
+        <h4 class="text-info">Animal a ser Adotado:</h4>
+        <div class="d-flex align-items-center mb-3">
+            {% if animal.foto_filename %}
+                <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+            {% endif %}
+            <div>
+                <p class="mb-0"><strong>Nome:</strong> {{ animal.nome }}</p>
+                <p class="mb-0"><strong>Espécie:</strong> {{ animal.especie }}</p>
+                <p class="mb-0"><strong>ID:</strong> {{ animal.id }}</p>
+            </div>
+        </div>
+        <hr class="border-light">
+
+        <form method="POST" action="{{ url_for('registrar_adocao_submit', animal_id=animal.id) }}">
+            <div class="mb-3">
+                <label for="adotante_selecionado_id" class="form-label">Selecione o Adotante:</label>
+                <select class="form-select bg-secondary text-light" id="adotante_selecionado_id" name="adotante_selecionado_id" required>
+                    <option value="" selected disabled>-- Escolha um Adotante --</option>
+                    {% for adotante_opt in adotantes %}
+                        <option value="{{ adotante_opt.id }}">{{ adotante_opt.nome_completo }} (CPF: {{ adotante_opt.cpf }})</option>
+                    {% else %}
+                        <option value="" disabled>Nenhum adotante cadastrado.</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text text-muted">
+                    Se o adotante não estiver na lista, <a href="{{ url_for('cadastrar_adotante') }}">cadastre-o primeiro</a>.
+                </div>
+            </div>
+
+            {# Você pode adicionar outros campos aqui se necessário, como data da adoção #}
+            {# <div class="mb-3">
+                <label for="data_adocao" class="form-label">Data da Adoção (Opcional)</label>
+                <input type="date" class="form-control bg-secondary text-light" id="data_adocao" name="data_adocao">
+            </div> #}
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Confirmar Adoção</button>
+                <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

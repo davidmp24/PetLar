@@ -31,9 +31,18 @@
                     <i class="fa-solid fa-paw me-2"></i> PetLar
                 </a>
             </div>
+            
 
             <ul class="nav flex-column sidebar-nav"> <!-- Mantendo a estrutura da base antiga -->
+                <hr class="sidebar-divider"> <!-- Mantendo divisor da base antiga -->
 
+                <!-- Links de Usuário e Logout -->
+                 <li class="nav-item">
+                    <!-- Mostra o nome do admin logado -->
+                    <span class="nav-link disabled" tabindex="-1" aria-disabled="true">
+                       <i class="fa-solid fa-user fa-fw me-2"></i> Olá, {{ session.get('admin', 'Admin') }}
+                    </span>
+                </li>
                 <!-- Links Visíveis Apenas se Admin Logado -->
                 {% if 'admin' in session %} <!-- Usando a chave de sessão do app.py atual -->
                     <li class="nav-item">
@@ -65,14 +74,17 @@
                    </li>
 
                     <hr class="sidebar-divider"> <!-- Mantendo divisor da base antiga -->
-
-                    <!-- Links de Usuário e Logout -->
-                     <li class="nav-item">
-                        <!-- Mostra o nome do admin logado -->
-                        <span class="nav-link disabled" tabindex="-1" aria-disabled="true">
-                           <i class="fa-solid fa-user fa-fw me-2"></i> Olá, {{ session.get('admin', 'Admin') }}
-                        </span>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'listar_admins' else '' }}" href="{{ url_for('listar_admins') }}">
+                            <i class="fa-solid fa-users-cog fa-fw me-2"></i> Gerenciar Admins
+                        </a>
                     </li>
+                     <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'registrar_admin' else '' }}" href="{{ url_for('registrar_admin') }}">
+                            <i class="fa-solid fa-user-plus fa-fw me-2"></i> Registrar Admin
+                        </a>
+                    </li>
+                    <hr class="sidebar-divider">
                     <li class="nav-item">
                         <!-- Link para Logout -->
                         <a class="nav-link" href="{{ url_for('logout') }}">

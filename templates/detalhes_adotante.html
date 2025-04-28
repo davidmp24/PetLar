@@ -59,6 +59,7 @@
                     <div class="col-md-6"> {# Primeira sub-coluna textual #}
                         <h5 class="text-info">Informações Pessoais</h5>
                         <p><strong>ID:</strong> {{ adotante.id }}</p>
+                        <p><strong>Data Cadastro:</strong> {{ adotante.data_cadastro.strftime('%d/%m/%Y %H:%M') if adotante.data_cadastro else 'N/A' }}</p>
                         <p><strong>Nome Completo:</strong> {{ adotante.nome_completo }}</p>
                         <p><strong>RG:</strong> {{ adotante.rg or 'Não informado' }}</p>
                         <p><strong>CPF:</strong> {{ adotante.cpf or 'Não informado' }}</p>

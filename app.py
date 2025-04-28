@@ -6,6 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 import os
 from flask import flash # Certifique-se que flash está importado
+from sqlalchemy import func 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave_secreta'
@@ -26,7 +27,7 @@ class Animal(db.Model):
     raca = db.Column(db.String(100), nullable=True) # Tornar null=True se não for obrigatório
     sexo = db.Column(db.String(10), nullable=True) # "Macho" ou "Fêmea"
     idade = db.Column(db.Integer, nullable=True) # Idade em anos/meses? Definir unidade.
-
+    data_cadastro = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
     # --- Campos do Formulário Adicionados ---
     temperamento = db.Column(db.String(200), nullable=True)
     comportamento_outros = db.Column(db.String(200), nullable=True) # Comportamento com outros animais
@@ -40,6 +41,8 @@ class Animal(db.Model):
     foto_filename = db.Column(db.String(255), nullable=True) # Nome do arquivo da foto
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
+    adotante_id = db.Column(db.Integer, db.ForeignKey('adotante.id'), nullable=True)
+    adotante = db.relationship('Adotante', backref=db.backref('animais_adotados', lazy=True))
 
     # --- Outros Campos ---
     adotado = db.Column(db.Boolean, default=False)
@@ -96,6 +99,7 @@ class Adotante(db.Model):
     quantidade_criancas = db.Column(db.Integer, nullable=True) # Só aplicável se tem_criancas == 'Sim'
     idades_criancas = db.Column(db.Text, nullable=True) # Armazenar como texto (ex: "2, 5 e 10 anos")
     restricoes_criancas = db.Column(db.Text, nullable=True) # Alergias ou outras restrições
+    data_cadastro = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
     
 @property
 def foto_pessoal_url(self):
@@ -151,11 +155,207 @@ def login():
         return render_template('login.html', error="Usuário ou senha inválidos!")
     return render_template('login.html')
 
+# --- Rotas de Gerenciamento de Administradores ---
+
+# Rota para Listar Admins
+@app.route('/listar_admins')
+def listar_admins():
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    # Busca todos os admins, talvez ordenados por username
+    try:
+        admins = Admin.query.order_by(Admin.username).all()
+    except Exception as e:
+        flash(f"Erro ao buscar administradores: {e}", "danger")
+        admins = []
+    # Passa o nome do admin logado para o template, para evitar auto-exclusão/edição
+    admin_logado = session.get('admin')
+    return render_template('listar_admins.html', admins=admins, admin_logado=admin_logado)
+
+# Rota para Registrar Novo Admin (GET e POST)
+@app.route('/registrar_admin', methods=['GET', 'POST'])
+def registrar_admin():
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        erros = []
+        # Validações
+        if not username:
+            erros.append('Nome de usuário é obrigatório.')
+        else:
+            # Verifica se username já existe
+            user_existente = Admin.query.filter_by(username=username).first()
+            if user_existente:
+                erros.append(f'O nome de usuário "{username}" já está em uso.')
+        if not password:
+            erros.append('Senha é obrigatória.')
+        if password != confirm_password:
+            erros.append('As senhas não coincidem.')
+
+        if erros:
+            for erro in erros: flash(erro, 'danger')
+            # Passa o username digitado de volta para repopular
+            return render_template('registrar_admin.html', username=username)
+
+        # Se passou nas validações
+        try:
+            hashed_password = generate_password_hash(password)
+            novo_admin = Admin(username=username, password=hashed_password)
+            db.session.add(novo_admin)
+            db.session.commit()
+            flash(f'Administrador "{username}" registrado com sucesso!', 'success')
+            return redirect(url_for('listar_admins'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao registrar administrador: {e}', 'danger')
+            app.logger.error(f"Erro DB Insert Admin: {e}")
+            return render_template('registrar_admin.html', username=username)
+
+    # Método GET
+    return render_template('registrar_admin.html')
+
+# Rota para Editar Admin (GET - Mostrar formulário)
+@app.route('/editar_admin/<int:admin_id>', methods=['GET'])
+def editar_admin_form(admin_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    admin_a_editar = Admin.query.get_or_404(admin_id)
+    # Passa o objeto admin para o template
+    return render_template('editar_admin.html', admin=admin_a_editar)
+
+# Rota para Editar Admin (POST - Processar formulário, focado em senha)
+@app.route('/editar_admin/<int:admin_id>', methods=['POST'])
+def editar_admin_submit(admin_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    admin_a_editar = Admin.query.get_or_404(admin_id)
+    # Não permitir editar o próprio nome de usuário facilmente via este form
+    # Foco na atualização de senha
+
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    erros = []
+    # Só valida e atualiza se o usuário preencheu os campos de senha
+    if new_password or confirm_password:
+        if not new_password:
+            erros.append('Nova senha é obrigatória para alterar.')
+        if new_password != confirm_password:
+            erros.append('As novas senhas não coincidem.')
+
+        if not erros:
+            try:
+                # Atualiza a senha hashada
+                admin_a_editar.password = generate_password_hash(new_password)
+                db.session.commit()
+                flash(f'Senha do administrador "{admin_a_editar.username}" atualizada com sucesso!', 'success')
+                return redirect(url_for('listar_admins'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Erro ao atualizar a senha: {e}', 'danger')
+                app.logger.error(f"Erro DB Update Admin Password: {e}")
+                # Re-renderiza o form de edição em caso de erro no DB
+                return render_template('editar_admin.html', admin=admin_a_editar)
+        else:
+            # Se houver erros de validação de senha
+            for erro in erros: flash(erro, 'danger')
+            return render_template('editar_admin.html', admin=admin_a_editar)
+    else:
+        # Se nenhum campo de senha foi preenchido, apenas volta para a lista
+        flash('Nenhuma alteração de senha foi fornecida.', 'info')
+        return redirect(url_for('listar_admins'))
+
+
+# Rota para Excluir Admin (Opcional, mas útil)
+@app.route('/excluir_admin/<int:admin_id>', methods=['POST'])
+def excluir_admin(admin_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    admin_a_excluir = Admin.query.get_or_404(admin_id)
+    admin_logado = session.get('admin')
+
+    # IMPEDE AUTO-EXCLUSÃO
+    if admin_a_excluir.username == admin_logado:
+        flash('Você não pode excluir sua própria conta de administrador.', 'danger')
+        return redirect(url_for('listar_admins'))
+
+    # (Opcional) Impedir exclusão do último admin
+    if Admin.query.count() <= 1:
+         flash('Não é possível excluir o último administrador.', 'danger')
+         return redirect(url_for('listar_admins'))
+
+    try:
+        nome_excluido = admin_a_excluir.username
+        db.session.delete(admin_a_excluir)
+        db.session.commit()
+        flash(f'Administrador "{nome_excluido}" excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir administrador: {e}', 'danger')
+        app.logger.error(f"Erro DB Delete Admin: {e}")
+
+    return redirect(url_for('listar_admins'))
+
 @app.route('/dashboard')
 def dashboard():
     if 'admin' not in session:
         return redirect(url_for('login'))
-    return render_template('index.html', page="dashboard")
+
+    try:
+        # --- Consultas para Estatísticas ---
+        total_animais = db.session.query(func.count(Animal.id)).scalar()
+        animais_disponiveis = db.session.query(func.count(Animal.id)).filter(Animal.adotado == False).scalar()
+        animais_adotados = db.session.query(func.count(Animal.id)).filter(Animal.adotado == True).scalar()
+        total_adotantes = db.session.query(func.count(Adotante.id)).scalar()
+
+        # --- Consultas para Listas Recentes (Exemplo: Últimos 5 animais) ---
+        ultimos_animais = Animal.query.order_by(Animal.data_cadastro.desc()).limit(5).all()
+        # (Adicionar consulta para últimos adotantes se desejar)
+
+        # --- Consultas para Gráficos (Exemplo) ---
+        # Dados para gráfico de Status (Disponível/Adotado)
+        stats_status = {
+            'Disponível': animais_disponiveis,
+            'Adotado': animais_adotados
+        }
+        # Dados para gráfico por Espécie
+        stats_especie = db.session.query(Animal.especie, func.count(Animal.especie)).group_by(Animal.especie).order_by(func.count(Animal.especie).desc()).all()
+        # Formatar para o gráfico (ex: [['Cachorro', 15], ['Gato', 10]])
+        dados_grafico_especie = [[especie, count] for especie, count in stats_especie]
+
+
+    except Exception as e:
+        flash(f"Erro ao carregar dados do dashboard: {e}", "danger")
+        app.logger.error(f"Erro Dashboard Query: {e}")
+        # Definir valores padrão em caso de erro
+        total_animais = 0
+        animais_disponiveis = 0
+        animais_adotados = 0
+        total_adotantes = 0
+        ultimos_animais = []
+        stats_status = {}
+        dados_grafico_especie = []
+
+
+    # Passa todos os dados para o template
+    return render_template('dashboard.html', # <- MUDAR AQUI
+                           page="dashboard",
+                           total_animais=total_animais,
+                           animais_disponiveis=animais_disponiveis,
+                           animais_adotados=animais_adotados,
+                           total_adotantes=total_adotantes,
+                           ultimos_animais=ultimos_animais,
+                           stats_status=stats_status,
+                           dados_grafico_especie=dados_grafico_especie
+                           )
 
 @app.route('/logout')
 def logout():
@@ -474,28 +674,31 @@ def marcar_adotado(animal_id):
     return redirect(url_for('listar_animais'))
 
 # --- Rota para Marcar como Disponível ---
+# Em app.py
+
 @app.route('/marcar_disponivel/<int:animal_id>', methods=['POST'])
 def marcar_disponivel(animal_id):
     if 'admin' not in session:
-        return redirect(url_for('login')) # Proteção: Apenas admin pode fazer isso
+        return redirect(url_for('login'))
 
-    animal = Animal.query.get_or_404(animal_id) # Pega o animal ou retorna 404
+    animal = Animal.query.get_or_404(animal_id)
 
-    # Verifica se o animal realmente estava adotado (opcional, mas boa prática)
     if not animal.adotado:
         flash(f'O animal "{animal.nome}" já está marcado como disponível.', 'info')
         return redirect(url_for('listar_animais'))
 
     try:
-        animal.adotado = False # Define o status como NÃO adotado
+        animal.adotado = False # Define status como NÃO adotado
+        animal.adotante_id = None # REMOVE o vínculo com o adotante!
+        # Se tiver data da adoção, limpar também: animal.data_adocao = None
         db.session.commit()
         flash(f'Animal "{animal.nome}" marcado como disponível novamente!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao marcar o animal como disponível: {e}', 'danger')
-        # app.logger.error(f"Erro DB Mark Available: {e}") # Logar erro
+        app.logger.error(f"Erro DB Mark Available: {e}")
 
-    return redirect(url_for('listar_animais')) # Redireciona de volta para a lista
+    return redirect(url_for('listar_animais'))
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
 @app.route('/cadastrar_adotante', methods=['GET', 'POST'])
@@ -515,10 +718,10 @@ def cadastrar_adotante():
 
     # Processa o formulário se a requisição for POST
     if request.method == 'POST':
-        # --- Ler dados do formulário ---
+    # --- Ler dados do formulário ---
         nome_completo = request.form.get('nome_completo')
-        rg = request.form.get('rg')
-        cpf = request.form.get('cpf')
+        rg = request.form.get('rg') # Lê o RG
+        cpf = request.form.get('cpf') # Lê o CPF
         endereco = request.form.get('endereco')
         bairro = request.form.get('bairro')
         cidade = request.form.get('cidade')
@@ -544,7 +747,15 @@ def cadastrar_adotante():
 
         # --- Validações (campos obrigatórios, formato, unicidade, etc.) ---
         if not nome_completo: erros.append("Nome completo é obrigatório.")
-        if not rg: erros.append("RG é obrigatório.")
+        # Validação do RG (Obrigatório e Único)
+        if not rg:
+            erros.append("RG é obrigatório.")
+        else:
+            # VVVVVVVVVV ADICIONAR ESTA VALIDAÇÃO VVVVVVVVVVVVV
+            rg_existente = Adotante.query.filter_by(rg=rg).first()
+            if rg_existente:
+                erros.append(f'O RG "{rg}" já está cadastrado para o adotante "{rg_existente.nome_completo}". Por favor, insira um RG diferente.')
+            # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         if not cpf:
             erros.append("CPF é obrigatório.")
         else:
@@ -938,6 +1149,72 @@ def excluir_adotante(adotante_id):
         app.logger.error(f"Erro DB Delete Adotante {adotante.id}: {e}")
 
     return redirect(url_for('listar_adotantes'))
+
+@app.route('/registrar_adocao/<int:animal_id>', methods=['GET'])
+def registrar_adocao_form(animal_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    animal = Animal.query.get_or_404(animal_id)
+    # Verifica se o animal já está adotado, não deveria chegar aqui se estiver
+    if animal.adotado:
+        flash(f'O animal "{animal.nome}" já está marcado como adotado.', 'warning')
+        return redirect(url_for('listar_animais'))
+
+    # Busca todos os adotantes para popular o dropdown
+    try:
+        adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
+    except Exception as e:
+        flash(f"Erro ao buscar adotantes: {e}", "danger")
+        return redirect(url_for('listar_animais'))
+
+    return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
+
+@app.route('/registrar_adocao/<int:animal_id>', methods=['POST'])
+def registrar_adocao_submit(animal_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    animal = Animal.query.get_or_404(animal_id)
+    # Pega o ID do adotante selecionado no formulário
+    adotante_id_selecionado = request.form.get('adotante_selecionado_id')
+
+    # Validação básica
+    if not adotante_id_selecionado:
+        flash('Você precisa selecionar um adotante.', 'danger')
+        # É preciso buscar os adotantes novamente para re-renderizar o form
+        adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
+        return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
+
+    adotante_selecionado = Adotante.query.get(adotante_id_selecionado)
+    if not adotante_selecionado:
+        flash('Adotante selecionado inválido ou não encontrado.', 'danger')
+        adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
+        return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
+
+    # Verifica se o animal já está adotado (dupla checagem)
+    if animal.adotado:
+        flash(f'O animal "{animal.nome}" já foi adotado (possivelmente por outra pessoa enquanto você preenchia).', 'warning')
+        return redirect(url_for('listar_animais'))
+
+    try:
+        # --- ATUALIZA O ANIMAL ---
+        animal.adotado = True             # Marca como adotado
+        animal.adotante_id = adotante_id_selecionado # Vincula o ID do adotante!
+        # Se adicionou data da adoção no form, salve aqui:
+        # data_adocao_str = request.form.get('data_adocao')
+        # if data_adocao_str: animal.data_adocao = datetime.strptime(data_adocao_str, '%Y-%m-%d').date()
+
+        db.session.commit()
+        flash(f'Adoção do animal "{animal.nome}" por "{adotante_selecionado.nome_completo}" registrada com sucesso!', 'success')
+        return redirect(url_for('listar_animais'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao registrar a adoção: {e}', 'danger')
+        app.logger.error(f"Erro DB Register Adoption: {e}")
+        adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
+        return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
 
 if __name__ == '__main__':
     with app.app_context():

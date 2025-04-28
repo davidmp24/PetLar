@@ -96,6 +96,7 @@
                 <div class="row mb-2">
                     <div class="col-md-6">
                         <p><strong>ID:</strong> {{ animal.id }}</p>
+                        <p><strong>Data Cadastro:</strong> {{ animal.data_cadastro.strftime('%d/%m/%Y %H:%M') if animal.data_cadastro else 'N/A' }}</p>
                         <p><strong>Espécie:</strong> {{ animal.especie or 'Não informado' }}</p>
                         <p><strong>Raça:</strong> {{ animal.raca or 'Não informado' }}</p>
                     </div>

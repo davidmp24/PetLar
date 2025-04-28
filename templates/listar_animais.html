@@ -19,7 +19,8 @@
         <div class="table-responsive"> <!-- Adicionado para melhor responsividade -->
             <table class="table table-dark table-striped table-hover align-middle"> <!-- align-middle para centralizar verticalmente -->
                 <thead>
-                    <tr>
+                    <tr>                       
+                        <th scope="col">Cadastrado em</th>
                         <th scope="col">ID</th>
                         <th scope="col">Foto</th>
                         <th scope="col">Nome</th>
@@ -34,6 +35,7 @@
                 <tbody>
                     {% for animal in animais %}
                     <tr>
+                        <td>{{ animal.data_cadastro.strftime('%d/%m/%Y') if animal.data_cadastro else 'N/A' }}</td> {# Formato mais curto para lista #}
                         <th scope="row">{{ animal.id }}</th>
                         <td>
                             {% if animal.foto_filename %}
@@ -81,6 +83,17 @@
                                       <button type="submit" class="btn btn-sm btn-success" title="Marcar Disponível"><i class="fas fa-undo"></i></button>
                                  </form>
                              {% endif %}
+                             {% if not animal.adotado %}
+                                    {# Link para a página de registro de adoção #}
+                                    <a href="{{ url_for('registrar_adocao_form', animal_id=animal.id) }}" class="btn btn-sm btn-primary" title="Registrar Adoção">
+                                        <i class="fas fa-check"></i> Registrar Adoção
+                                    </a>
+                                {% else %}
+                                    {# Formulário para Marcar Disponível (mantém como estava) #}
+                                    <form action="{{ url_for('marcar_disponivel', animal_id=animal.id) }}" method="POST" style="display: inline;">
+                                         <button type="submit" class="btn btn-sm btn-success" title="Marcar Disponível"><i class="fas fa-undo"></i></button>
+                                    </form>
+                                {% endif %}
                              <!-- Fim do Botão Condicional -->
                          </div>
                      </td>
