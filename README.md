@@ -2,7 +2,8 @@
 
 PetLar é um sistema web desenvolvido como parte do Projeto Integrador da UNIVESP com o objetivo de otimizar o processo de adoção de animais de uma ONG local. A aplicação busca substituir fichas físicas por uma solução digital segura, padronizada e acessível, facilitando o cadastro, organização e acompanhamento de animais e adotantes.
 
- Funcionalidades
+ 
+ ### Funcionalidades ###
  
 ✅ Cadastro completo de animais com foto, características, comportamento e status de adoção.
 
@@ -22,32 +23,55 @@ PetLar é um sistema web desenvolvido como parte do Projeto Integrador da UNIVES
 
 ✅ Banco de dados relacional com SQLite.
 
-🧱 Estrutura do Projeto:
+
+
+###🧱 Estrutura do Projeto: ###
 
 PetLar/
+
 ├── app/
+
 │   ├── static/
+
 │   │   ├── css/
+
 │   │   └── images/
+
 │   ├── templates/
+
 │   │   ├── login.html
+
 │   │   ├── dashboard.html
+
 │   │   ├── cadastrar_animal.html
+
 │   │   └── ...
+
 │   ├── models/
+
 │   │   └── models.py
+
 │   ├── routes/
+
 │   │   └── views.py
+
 │   ├── forms.py
+
 │   └── __init__.py
+
 ├── database/
+
 │   └── petlar.db
+
 ├── tests/
+
 │   └── test_app.py
+
 ├── requirements.txt
+
 └── run.py
 
-🔧 Tecnologias Utilizadas
+###🔧 Tecnologias Utilizadas ###
 
    • Python 3.11
 
@@ -65,4 +89,17 @@ PetLar/
    
    • Gráficos com Chart.js
 
+### Tela de Login
+![Tela de Login](images/login.png)
+
+### Dashboard
+![Dashboard](images/dashboard.png)
    
+### Cadastro de Animal
+![Dashboard](images/Cad-Animal.png)
+
+### Lista de Animais
+![Dashboard](images/lista-animais.png)
+
+### Detalhes do Animal
+![Dashboard](images/detalhes-animal.png)
