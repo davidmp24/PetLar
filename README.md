@@ -90,16 +90,16 @@ PetLar/
    • Gráficos com Chart.js
 
 ### Tela de Login
-![Tela de Login](images/login.png)
+![Tela de Login](images/login-user.png)
 
 ### Dashboard
 ![Dashboard](images/dashboard.png)
    
 ### Cadastro de Animal
-![Dashboard](images/Cad-Animal.png)
+![Cadastro de Animal](images/Cad-Animal.png)
 
 ### Lista de Animais
-![Dashboard](images/lista-animais.png)
+![Lista de Animais](images/lista-animais.png)
 
 ### Detalhes do Animal
-![Dashboard](images/detalhes-animal.png)
+![Detalhes do Animal](images/detalhes-animal.png)
