@@ -1,7 +1,9 @@
 🐾 PetLar – Sistema de Adoção de Animais
+
 PetLar é um sistema web desenvolvido como parte do Projeto Integrador da UNIVESP com o objetivo de otimizar o processo de adoção de animais de uma ONG local. A aplicação busca substituir fichas físicas por uma solução digital segura, padronizada e acessível, facilitando o cadastro, organização e acompanhamento de animais e adotantes.
 
  Funcionalidades
+ 
 ✅ Cadastro completo de animais com foto, características, comportamento e status de adoção.
 
 ✅ Cadastro de adotantes com validações, imagem e informações comportamentais.
