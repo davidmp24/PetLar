@@ -96,7 +96,7 @@ PetLar/
 ![Dashboard](images/dashboard.png)
    
 ### Cadastro de Animal
-![Cadastro de Animal](images/Cad-An.png)
+![Cadastro de Animal](images/cad-animal.png)
 
 ### Lista de Animais
 ![Lista de Animais](images/lista-animais.png)
