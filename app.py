@@ -9,8 +9,14 @@ from flask import flash # Certifique-se que flash está importado
 from sqlalchemy import func 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'chave_secreta'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///petlar.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma_chave_dev_muito_segura_padrao')
+if os.environ.get('DATABASE_URL'):
+    # Para o Render, a URL já vem no formato correto para SQLAlchemy >= 1.4
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///petlar.db' # Local
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)  # Inicialize SQLAlchemy *apenas aqui*
 
@@ -701,6 +707,23 @@ def marcar_disponivel(animal_id):
     return redirect(url_for('listar_animais'))
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
+import os
+import uuid # Necessário para nomes de arquivo únicos
+from werkzeug.utils import secure_filename # Necessário para nomes de arquivo seguros
+from flask import (
+    Flask, render_template, request, redirect, url_for, session, flash
+)
+# Certifique-se de que seus modelos (Adotante, Animal) e o objeto db estão importados
+# from .models import db, Adotante, Animal # Exemplo se estiver usando blueprints/models.py
+# Ou se estiver tudo em app.py:
+# from app import db, Adotante, Animal
+
+# Certifique-se de que as configurações e funções auxiliares estão definidas:
+# app.config['UPLOAD_FOLDER_ADOTANTES'] = ...
+# def allowed_file(filename): ...
+# def remover_arquivo_se_existe(diretorio, nome_arquivo): ... # Lembre-se que atualizamos esta função
+
+# --- Rota para Cadastrar Adotante (GET e POST) ---
 @app.route('/cadastrar_adotante', methods=['GET', 'POST'])
 def cadastrar_adotante():
     # Verifica se o administrador está logado
@@ -709,36 +732,38 @@ def cadastrar_adotante():
 
     # Busca animais disponíveis ANTES de verificar o método da requisição
     # Isso garante que a lista esteja disponível para GET e para re-renderização em POST com erros
-    try:
-        animais_disponiveis = Animal.query.filter_by(adotado=False).order_by(Animal.nome).all()
-    except Exception as e:
-        flash(f"Erro ao buscar animais disponíveis: {e}", "warning")
-        app.logger.error(f"Erro ao buscar animais disponíveis: {e}")
-        animais_disponiveis = [] # Define como lista vazia em caso de erro
+    # (Removido pois a lista de animais não está sendo usada ativamente neste formulário simplificado)
+    # try:
+    #     animais_disponiveis_para_interesse = Animal.query.filter_by(adotado=False).order_by(Animal.nome).all()
+    # except Exception as e:
+    #     flash(f"Erro ao buscar animais disponíveis: {e}", "warning")
+    #     app.logger.error(f"Erro ao buscar animais disponíveis: {e}")
+    #     animais_disponiveis_para_interesse = []
 
     # Processa o formulário se a requisição for POST
     if request.method == 'POST':
-    # --- Ler dados do formulário ---
+        # --- Ler dados do formulário ---
         nome_completo = request.form.get('nome_completo')
-        rg = request.form.get('rg') # Lê o RG
-        cpf = request.form.get('cpf') # Lê o CPF
+        rg = request.form.get('rg')
+        cpf = request.form.get('cpf')
         endereco = request.form.get('endereco')
         bairro = request.form.get('bairro')
         cidade = request.form.get('cidade')
         cep = request.form.get('cep')
         telefone = request.form.get('telefone')
         email = request.form.get('email')
-        animal_interesse = request.form.get('animal_interesse') # Será o nome do animal selecionado
-        tipo_animal_interesse = request.form.get('tipo_animal_interesse') # Pode se tornar redundante
+        animal_interesse = request.form.get('animal_interesse') # Nome do animal, pode ser um campo de texto
+        tipo_animal_interesse = request.form.get('tipo_animal_interesse') # Cão, Gato, etc.
         justificativa_adocao = request.form.get('justificativa_adocao')
-        tem_outros_animais = request.form.get('tem_outros_animais')
+        tem_outros_animais = request.form.get('tem_outros_animais') # 'Sim' ou 'Nao'
         tempo_sozinho_str = request.form.get('tempo_sozinho')
         quantidade_animais_str = request.form.get('quantidade_animais')
         tipos_animais = request.form.get('tipos_animais')
-        tem_criancas = request.form.get('tem_criancas')
-        quantidade_criancas_str = request.form.get('quantidade_criancas')
-        idades_criancas = request.form.get('idades_criancas')
-        restricoes_criancas = request.form.get('restricoes_criancas')
+        # Removendo campos de crianças por enquanto, já que não estão no modelo Adotante
+        # tem_criancas = request.form.get('tem_criancas')
+        # quantidade_criancas_str = request.form.get('quantidade_criancas')
+        # idades_criancas = request.form.get('idades_criancas')
+        # restricoes_criancas = request.form.get('restricoes_criancas')
         foto_pessoal = request.files.get('foto_pessoal')
         foto_local = request.files.get('foto_local')
 
@@ -747,62 +772,62 @@ def cadastrar_adotante():
 
         # --- Validações (campos obrigatórios, formato, unicidade, etc.) ---
         if not nome_completo: erros.append("Nome completo é obrigatório.")
-        # Validação do RG (Obrigatório e Único)
         if not rg:
             erros.append("RG é obrigatório.")
         else:
-            # VVVVVVVVVV ADICIONAR ESTA VALIDAÇÃO VVVVVVVVVVVVV
             rg_existente = Adotante.query.filter_by(rg=rg).first()
             if rg_existente:
-                erros.append(f'O RG "{rg}" já está cadastrado para o adotante "{rg_existente.nome_completo}". Por favor, insira um RG diferente.')
-            # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                erros.append(f'O RG "{rg}" já está cadastrado para o adotante "{rg_existente.nome_completo}".')
         if not cpf:
             erros.append("CPF é obrigatório.")
         else:
             cpf_existente = Adotante.query.filter_by(cpf=cpf).first()
             if cpf_existente:
-                erros.append(f'O CPF "{cpf}" já está cadastrado. Por favor, insira um CPF diferente.')
+                erros.append(f'O CPF "{cpf}" já está cadastrado para o adotante "{cpf_existente.nome_completo}".')
         if not endereco: erros.append("Endereço é obrigatório.")
         if not bairro: erros.append("Bairro é obrigatório.")
         if not cidade: erros.append("Cidade é obrigatória.")
         if not cep: erros.append("CEP é obrigatório.")
         if not telefone: erros.append("Telefone é obrigatório.")
-        if not email: erros.append("Email é obrigatório.")
-        if not animal_interesse: erros.append("Selecione um animal de interesse.") # Atualizada msg
-        if not tipo_animal_interesse: erros.append("Tipo de animal de interesse é obrigatório.") # Manter ou remover?
-        if not justificativa_adocao: erros.append("Justificativa é obrigatória.")
-        if not tem_outros_animais: erros.append("Informe se possui outros animais.")
-        if not tem_criancas: erros.append("Informe se há crianças na residência.")
+        if not email: erros.append("Email é obrigatório.") # Adicionar validação de formato de email
+        if not animal_interesse: erros.append("Nome do animal de interesse é obrigatório.")
+        if not tipo_animal_interesse: erros.append("Tipo de animal de interesse é obrigatório.")
+        if not justificativa_adocao: erros.append("Justificativa da adoção é obrigatória.")
+        if not tem_outros_animais: erros.append("Informe se possui outros animais na residência.")
+        # Validação de tempo_sozinho se fornecido
+        if tempo_sozinho_str and not tempo_sozinho_str.isdigit():
+             erros.append("Tempo sozinho deve ser um número de horas.")
+
 
         # --- Processar Foto Pessoal ---
-        foto_pessoal_filename_salvar = None
+        foto_pessoal_filename_salvar = None # Inicializa como None
         if foto_pessoal and foto_pessoal.filename != '':
             if allowed_file(foto_pessoal.filename):
                 nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_pessoal.filename}")
                 caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
                 try:
                     foto_pessoal.save(caminho)
-                    foto_pessoal_filename_salvar = nome_seguro
+                    foto_pessoal_filename_salvar = nome_seguro # Guarda nome se salvou
                 except Exception as e:
                     erros.append(f"Erro ao salvar foto pessoal: {e}")
                     app.logger.error(f"Erro ao salvar foto pessoal: {e}")
             else:
-                erros.append('Tipo de arquivo não permitido para foto pessoal.')
+                erros.append(f"Tipo de arquivo não permitido para foto pessoal: {foto_pessoal.filename.rsplit('.',1)[-1] if '.' in foto_pessoal.filename else 'desconhecido'}")
 
         # --- Processar Foto do Local ---
-        foto_local_filename_salvar = None
+        foto_local_filename_salvar = None # Inicializa como None
         if foto_local and foto_local.filename != '':
             if allowed_file(foto_local.filename):
                 nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_local.filename}")
                 caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
                 try:
                     foto_local.save(caminho)
-                    foto_local_filename_salvar = nome_seguro
+                    foto_local_filename_salvar = nome_seguro # Guarda nome se salvou
                 except Exception as e:
                     erros.append(f"Erro ao salvar foto do local: {e}")
                     app.logger.error(f"Erro ao salvar foto do local: {e}")
             else:
-                erros.append('Tipo de arquivo não permitido para foto do local.')
+                erros.append(f"Tipo de arquivo não permitido para foto do local: {foto_local.filename.rsplit('.',1)[-1] if '.' in foto_local.filename else 'desconhecido'}")
 
         # --- Conversão de Tipos e Validações Condicionais ---
         tempo_sozinho = None
@@ -812,43 +837,33 @@ def cadastrar_adotante():
                 if tempo_sozinho < 0:
                      erros.append('Tempo sozinho (horas) não pode ser negativo.')
             except ValueError:
-                erros.append('Tempo sozinho (horas) deve ser um número válido.')
+                # Erro já adicionado na validação inicial se não for digit
+                if "Tempo sozinho deve ser um número de horas." not in erros and "Tempo sozinho deve ser um número válido." not in erros :
+                    erros.append('Tempo sozinho (horas) deve ser um número válido.')
 
-        quantidade_animais = None
+
+        quantidade_animais_convertida = None # Renomeada para evitar confusão
+        tipos_animais_para_salvar = tipos_animais # Usa valor do form
+
         if tem_outros_animais == 'Sim':
              if not quantidade_animais_str:
                  erros.append('Informe a quantidade de outros animais que possui.')
              else:
                  try:
-                    quantidade_animais = int(quantidade_animais_str)
-                    if quantidade_animais < 1:
+                    quantidade_animais_convertida = int(quantidade_animais_str)
+                    if quantidade_animais_convertida < 1:
                          erros.append('Quantidade de outros animais deve ser pelo menos 1.')
                  except ValueError:
                      erros.append('Quantidade de outros animais deve ser um número válido.')
-             if quantidade_animais is not None and quantidade_animais > 0 and not tipos_animais:
-                 erros.append('Informe os tipos dos outros animais que possui.')
-        elif tem_outros_animais == 'Nao':
-            quantidade_animais = None # Garante que seja None
-            tipos_animais = None    # Garante que seja None
 
-        quantidade_criancas = None
-        if tem_criancas == 'Sim':
-            if not quantidade_criancas_str:
-                erros.append("Informe a quantidade de crianças.")
-            else:
-                try:
-                    quantidade_criancas = int(quantidade_criancas_str)
-                    if quantidade_criancas < 1:
-                        erros.append('Quantidade de crianças deve ser pelo menos 1.')
-                except ValueError:
-                    erros.append('Quantidade de crianças deve ser um número válido.')
-            if not idades_criancas:
-                 erros.append("Informe a(s) idade(s) da(s) criança(s).")
-            # restricoes_criancas é opcional
-        elif tem_criancas == 'Nao':
-            quantidade_criancas = None # Garante que seja None
-            idades_criancas = None    # Garante que seja None
-            restricoes_criancas = None # Garante que seja None
+             if quantidade_animais_convertida is not None and quantidade_animais_convertida > 0 and not tipos_animais_para_salvar:
+                 erros.append('Informe os tipos dos outros animais que possui.')
+
+        elif tem_outros_animais == 'Nao':
+            quantidade_animais_convertida = None
+            tipos_animais_para_salvar = None
+        # else: erro já tratado em 'if not tem_outros_animais'
+
 
         # --- Se houver erros (de validação ou upload), re-renderizar o formulário ---
         if erros:
@@ -856,15 +871,12 @@ def cadastrar_adotante():
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar)
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar)
 
-            # Exibe todas as mensagens de erro acumuladas para o usuário
             for erro in erros:
                  flash(erro, 'danger')
 
-            # Re-renderiza o template, passando os dados já digitados de volta (request.form)
-            # e a lista de animais_disponiveis (que foi buscada no início da função)
             return render_template('cadastrar_adotante.html',
-                                   form_data=request.form,
-                                   animais_disponiveis=animais_disponiveis)
+                                   form_data=request.form)
+                                   # animais_disponiveis=animais_disponiveis_para_interesse) # Removido se não usado no form
 
         # --- Se tudo ok (sem erros), criar e salvar o objeto ---
         novo_adotante = Adotante(
@@ -880,54 +892,51 @@ def cadastrar_adotante():
             animal_interesse=animal_interesse,
             tipo_animal_interesse=tipo_animal_interesse,
             justificativa_adocao=justificativa_adocao,
-            # Outros animais
             tem_outros_animais=tem_outros_animais,
             tempo_sozinho=tempo_sozinho,
-            quantidade_animais=quantidade_animais,
-            tipos_animais=tipos_animais,
-            # Crianças
-            tem_criancas=tem_criancas,
-            quantidade_criancas=quantidade_criancas,
-            idades_criancas=idades_criancas,
-            restricoes_criancas=restricoes_criancas,
-            # Fotos (nomes dos arquivos salvos ou None)
+            quantidade_animais=quantidade_animais_convertida, # Usa variável convertida
+            tipos_animais=tipos_animais_para_salvar,         # Usa variável tratada
+            # Removendo campos de crianças por enquanto
+            # tem_criancas=tem_criancas,
+            # quantidade_criancas=quantidade_criancas,
+            # idades_criancas=idades_criancas,
+            # restricoes_criancas=restricoes_criancas,
             foto_pessoal_filename=foto_pessoal_filename_salvar,
             foto_local_filename=foto_local_filename_salvar
         )
 
         try:
-            # Adiciona o novo objeto à sessão do banco de dados
             db.session.add(novo_adotante)
-            # Tenta salvar as mudanças no banco de dados
             db.session.commit()
-            # Se o commit funcionou, exibe mensagem de sucesso
             flash('Adotante cadastrado com sucesso!', 'success')
-            # Redireciona para o dashboard (ou outra página, como a lista se reativada)
             return redirect(url_for('dashboard'))
 
         except Exception as e:
-            # Se o commit falhar (ex: outra constraint do DB, erro de conexão)
-            db.session.rollback() # Desfaz quaisquer mudanças pendentes na sessão
-            flash(f'Erro interno ao salvar o adotante no banco de dados: {e}', 'danger')
-            app.logger.error(f"Erro DB Insert Adotante: {e}")
+            db.session.rollback()
+            # Tratar erros de integridade do DB (como UNIQUE constraint) de forma mais específica se necessário
+            if "UNIQUE constraint failed" in str(e):
+                if "adotante.cpf" in str(e):
+                    flash(f"Erro: O CPF '{cpf}' já está cadastrado. Por favor, verifique os dados.", 'danger')
+                elif "adotante.rg" in str(e):
+                    flash(f"Erro: O RG '{rg}' já está cadastrado. Por favor, verifique os dados.", 'danger')
+                else:
+                    flash(f'Erro de integridade ao salvar no banco de dados: {e}', 'danger')
+            else:
+                flash(f'Erro interno ao salvar o adotante no banco de dados: {e}', 'danger')
 
-            # Tenta remover as fotos que foram salvas no disco durante esta requisição
+            app.logger.error(f"Erro DB Insert Adotante: {e} - Dados: {request.form}")
+
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar)
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar)
 
-            # Re-renderiza o formulário com os dados que o usuário tentou enviar e a lista de animais
             return render_template('cadastrar_adotante.html',
-                                   form_data=request.form,
-                                   animais_disponiveis=animais_disponiveis)
+                                   form_data=request.form)
+                                   # animais_disponiveis=animais_disponiveis_para_interesse)
 
     # --- Requisição GET ---
-    # Se não for POST, simplesmente renderiza o formulário vazio (form_data=None)
-    # A lista de animais_disponiveis já foi buscada no início da função
     return render_template('cadastrar_adotante.html',
-                           form_data=None,
-                           animais_disponiveis=animais_disponiveis)
-
-# --- Rota para Listar Adotantes ---
+                           form_data=None)
+                           # animais_disponiveis=animais_disponiveis_para_interesse)
 @app.route('/listar_adotantes')
 def listar_adotantes():
     if 'admin' not in session:
