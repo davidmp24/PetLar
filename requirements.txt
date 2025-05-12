@@ -8,3 +8,4 @@ SQLAlchemy<2.0
 pytest
 pytest-flask
 pytest-cov
+gunicorn
