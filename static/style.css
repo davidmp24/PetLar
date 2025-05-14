@@ -349,3 +349,4 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
 .skip-link:focus {
     top: 0; /* Traz para a tela quando recebe foco */
 }
+

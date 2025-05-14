@@ -189,6 +189,22 @@
         // A limpeza dos outros campos é feita pelo type="reset"
     }
 
+    function initMap() {
+    const mapContainer = document.getElementById("map-container");
+    if (!mapContainer) {
+        console.error('Elemento map-container não encontrado');
+        return;
+    }
+    const initialPosition = { lat: initialLat, lng: initialLng };
+    map = new google.maps.Map(mapContainer, {
+        center: initialPosition, zoom: initialZoom, mapTypeControl: false, streetViewControl: false
+    });
+
+    window.initMap = function() {
+        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            console.error('Google Maps API não carregada');
+            return;
+        }
     // --- Funções do Google Maps ---
     let map;
     let marker;
@@ -248,9 +264,8 @@
     }
 
 </script>
-{# Carrega a API do Google Maps - SUBSTITUA SUA_CHAVE_DE_API #}
 <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&loading=async&libraries=places&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&v=weekly&libraries=places&callback=initMap">
 </script>
 {% endblock %} {# Fim do Bloco Scripts #}
 
