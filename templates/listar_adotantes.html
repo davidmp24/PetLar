@@ -1,118 +1,98 @@
-{% extends 'index.html' %} {# Define que este template herda a estrutura de 'index.html' #}
-
-{# Define o título da aba do navegador para esta página específica #}
+{% extends 'index.html' %}
 {% block title %}Listar Adotantes - PetLar{% endblock %}
-
-{# Define o título principal que aparecerá no cabeçalho da área de conteúdo #}
 {% block page_title %}Adotantes Cadastrados{% endblock %}
 
-{# Bloco principal onde o conteúdo específico desta página será inserido #}
 {% block content %}
-<div class="container mt-4"> {# Container principal com margem superior #}
-    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card com fundo escuro, sombra e preenchimento #}
-
-        {# Cabeçalho da seção: Título e botão de adicionar novo #}
-        <div class="d-flex justify-content-between align-items-center mb-3"> {# Layout flexível para alinhar itens #}
-            <h3 class="text-light mb-0">Lista de Adotantes</h3> {# Título da lista, sem margem inferior #}
-            {# Botão para ir para a página de cadastro de adotante #}
+<div class="container mt-4">
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="text-light mb-0">Lista de Adotantes</h3>
             <a href="{{ url_for('cadastrar_adotante') }}" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> Cadastrar Novo Adotante {# Ícone de mais e texto #}
+                <i class="fas fa-plus me-1"></i> Cadastrar Novo Adotante
             </a>
         </div>
 
-        {# Exibe mensagens flash (de sucesso, erro, etc.) se houver alguma #}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        {# Verifica se a lista de adotantes passada pela rota não está vazia #}
-        {% if adotantes %}
-            <div class="table-responsive"> {# Div para tornar a tabela rolável em telas pequenas #}
-                {# Tabela com estilos Bootstrap: escura, listrada, hover e alinhamento vertical centralizado #}
-                <table class="table table-dark table-striped table-hover align-middle">
-                    <thead> {# Cabeçalho da tabela #}
-                        <tr> {# Linha do cabeçalho #}
-                            <th scope="col">ID</th> {# Coluna ID #}
-                            <th scope="col">Foto</th> {# Coluna Foto Pessoal #}
-                            <th scope="col">Nome Completo</th> {# Coluna Nome Completo #}
-                            <th scope="col">CPF</th> {# Coluna CPF #}
-                            <th scope="col">Telefone</th> {# Coluna Telefone #}
-                            <th scope="col">Email</th> {# Coluna Email #}
-                            <th scope="col">Animal Interesse</th> {# Coluna Animal de Interesse #}
-                            <th scope="col" style="min-width: 150px;">Ações</th> {# Coluna Ações, com largura mínima #}
-                        </tr>
-                    </thead>
-                    <tbody> {# Corpo da tabela #}
-                        {# Loop para iterar sobre cada objeto 'adotante' na lista 'adotantes' #}
-                        {% for adotante in adotantes %}
-                            <tr> {# Linha para cada adotante #}
-                                <th scope="row">{{ adotante.id }}</th> {# Célula ID (usando th para destaque) #}
-
-                                {# Célula para exibir a foto pessoal ou placeholder #}
-                                <td>
-                                    {# Verifica se o adotante tem um nome de arquivo de foto pessoal salvo #}
-                                    {% if adotante.foto_pessoal_filename %}
-                                        {# Se tiver, exibe a imagem usando url_for para gerar o caminho estático #}
-                                        <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_pessoal_filename) }}"
-                                             alt="Foto de {{ adotante.nome_completo }}" {# Texto alternativo descritivo #}
-                                             class="img-thumbnail" {# Estilo Bootstrap para miniatura #}
-                                             style="width: 50px; height: 50px; object-fit: cover;"> {# Estilo inline para tamanho e recorte #}
-                                    {% else %}
-                                        {# Se não tiver, exibe uma imagem placeholder #}
-                                        <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}"
-                                             alt="Sem Foto Pessoal" {# Texto alternativo para placeholder #}
-                                             class="img-thumbnail" {# Estilo Bootstrap #}
-                                             style="width: 50px; height: 50px; object-fit: cover;"> {# Estilo inline #}
-                                        {# Garanta que o arquivo 'static/images/placeholder_adotante.png' exista #}
-                                    {% endif %}
-                                </td>
-
-                                <td>{{ adotante.nome_completo }}</td> {# Célula Nome Completo #}
-                                <td>{{ adotante.cpf }}</td> {# Célula CPF #}
-                                <td>{{ adotante.telefone }}</td> {# Célula Telefone #}
-                                <td>{{ adotante.email }}</td> {# Célula Email #}
-                                <td>{{ adotante.animal_interesse }} ({{ adotante.tipo_animal_interesse }})</td> {# Célula Interesse #}
-
-                                {# Célula contendo os botões de ação #}
-                                <td>
-                                    {# Div com flexbox para alinhar os botões e adicionar espaçamento (gap) #}
-                                    <div class="d-flex flex-wrap gap-1">
-                                        {# Botão/Link para ver os detalhes do adotante #}
-                                        <a href="{{ url_for('detalhes_adotante', adotante_id=adotante.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes">
-                                            <i class="fas fa-eye"></i> {# Ícone de olho #}
-                                        </a>
-                                        {# Botão/Link para ir para o formulário de edição do adotante #}
-                                        <a href="{{ url_for('editar_adotante_form', adotante_id=adotante.id) }}" class="btn btn-sm btn-warning" title="Editar">
-                                            <i class="fas fa-edit"></i> {# Ícone de lápis #}
-                                        </a>
-                                        {# Formulário para enviar a requisição de exclusão (método POST) #}
-                                        <form action="{{ url_for('excluir_adotante', adotante_id=adotante.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir o cadastro de {{ adotante.nome_completo }}?');"> {# Mensagem de confirmação mais específica #}
-                                            {# Botão de submit do formulário de exclusão #}
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
-                                                <i class="fas fa-trash"></i> {# Ícone de lixeira #}
-                                            </button>
-                                            {# Adicionar input CSRF aqui se estiver usando Flask-WTF/CSRFProtect: {{ form.csrf_token }} #}
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %} {# Fim do loop sobre os adotantes #}
-                    </tbody> {# Fim do corpo da tabela #}
-                </table> {# Fim da tabela #}
-            </div> {# Fim da div table-responsive #}
-        {% else %} {# Caso a lista 'adotantes' esteja vazia #}
-            {# Exibe uma mensagem informativa #}
-            <div class="alert alert-info text-center">
-                Nenhum adotante cadastrado ainda.
+        {# --- INÍCIO DO FORMULÁRIO DE FILTRO PARA ADOTANTES --- #}
+        <form method="GET" action="{{ url_for('listar_adotantes') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="filtro_nome_adotante" class="form-label">Nome do Adotante:</label>
+                    <input type="text" class="form-control form-control-sm bg-secondary text-light" id="filtro_nome_adotante" name="filtro_nome_adotante" value="{{ request.args.get('filtro_nome_adotante', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro_cpf_adotante" class="form-label">CPF do Adotante:</label>
+                    <input type="text" class="form-control form-control-sm bg-secondary text-light" id="filtro_cpf_adotante" name="filtro_cpf_adotante" value="{{ request.args.get('filtro_cpf_adotante', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro_data_inicio_adotante" class="form-label">Cadastrado de:</label>
+                    <input type="date" class="form-control form-control-sm bg-secondary text-light" id="filtro_data_inicio_adotante" name="filtro_data_inicio_adotante" value="{{ request.args.get('filtro_data_inicio_adotante', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtro_data_fim_adotante" class="form-label">Cadastrado até:</label>
+                    <input type="date" class="form-control form-control-sm bg-secondary text-light" id="filtro_data_fim_adotante" name="filtro_data_fim_adotante" value="{{ request.args.get('filtro_data_fim_adotante', '') }}">
+                </div>
             </div>
-        {% endif %} {# Fim da condição 'if adotantes' #}
-    </div> {# Fim da div card #}
-</div> {# Fim da div container #}
-{% endblock %} {# Fim do bloco 'content' #}
+            <div class="row mt-3">
+                <div class="col-md-12 text-end">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i> Filtrar Adotantes</button>
+                    <a href="{{ url_for('listar_adotantes') }}" class="btn btn-secondary btn-sm"><i class="fas fa-times me-1"></i> Limpar Filtros</a>
+                </div>
+            </div>
+        </form>
+        {# --- FIM DO FORMULÁRIO DE FILTRO --- #}
+
+        {% if adotantes %}
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Foto Pessoal</th>
+                        <th scope="col">Nome Completo</th>
+                        <th scope="col">CPF</th>
+                        <th scope="col">Telefone</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Animal Interesse</th>
+                        <th scope="col">Cadastrado em</th> {# <-- NOVA COLUNA #}
+                        <th scope="col" style="min-width: 150px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adotante_item in adotantes %} {# Renomeada variável do loop #}
+                    <tr>
+                        <th scope="row">{{ adotante_item.id }}</th>
+                        <td>
+                            {% if adotante_item.foto_pessoal_filename %}
+                                <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante_item.foto_pessoal_filename) }}" alt="Foto de {{ adotante_item.nome_completo }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}" alt="Sem Foto Pessoal" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% endif %}
+                        </td>
+                        <td>{{ adotante_item.nome_completo }}</td>
+                        <td>{{ adotante_item.cpf }}</td>
+                        <td>{{ adotante_item.telefone }}</td>
+                        <td>{{ adotante_item.email }}</td>
+                        <td>{{ adotante_item.animal_interesse }} ({{ adotante_item.tipo_animal_interesse }})</td>
+                        <td>{{ adotante_item.data_cadastro.strftime('%d/%m/%Y') if adotante_item.data_cadastro else 'N/A' }}</td> {# <-- DADO DA NOVA COLUNA #}
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a href="{{ url_for('detalhes_adotante', adotante_id=adotante_item.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                                <a href="{{ url_for('editar_adotante_form', adotante_id=adotante_item.id) }}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('excluir_adotante', adotante_id=adotante_item.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir {{ adotante_item.nome_completo }}?');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Nenhum adotante encontrado com os filtros aplicados (ou nenhum cadastrado ainda).
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 import os
 from flask import flash # Certifique-se que flash está importado
 from sqlalchemy import func 
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma_chave_dev_muito_segura_padrao')
@@ -506,14 +507,57 @@ def cadastrar_animal():
     # CORREÇÃO: Passando form_data=None explicitamente
     return render_template('cadastrar_animal.html', form_data=None)
 
-@app.route('/listar_animais')
+# Em app.py
+
+@app.route('/listar_animais', methods=['GET'])
 def listar_animais():
     if 'admin' not in session:
         return redirect(url_for('login'))
-    animais = Animal.query.all()
-    return render_template('listar_animais.html', animais=animais)
 
-from sqlalchemy import func
+    query = Animal.query
+
+    # Ler parâmetros de filtro da URL
+    filtro_nome = request.args.get('filtro_nome', '').strip()
+    filtro_especie = request.args.get('filtro_especie', '').strip()
+    filtro_data_inicio_str = request.args.get('filtro_data_inicio', '').strip()
+    filtro_data_fim_str = request.args.get('filtro_data_fim', '').strip()
+
+    # Aplicar filtros à query
+    if filtro_nome:
+        query = query.filter(Animal.nome.ilike(f'%{filtro_nome}%'))
+    if filtro_especie:
+        query = query.filter(Animal.especie.ilike(f'%{filtro_especie}%'))
+
+    # Aplicar filtro de data de início
+    if filtro_data_inicio_str:
+        try:
+            # Converte a string de data para objeto datetime
+            data_inicio = datetime.strptime(filtro_data_inicio_str, '%Y-%m-%d').date()
+            # Filtra registros onde data_cadastro é maior ou igual à data_inicio
+            # Precisamos usar func.date() se a coluna for DateTime e quisermos comparar só a data
+            query = query.filter(db.func.date(Animal.data_cadastro) >= data_inicio)
+        except ValueError:
+            flash("Formato de Data de Início inválido. Use AAAA-MM-DD.", "warning")
+            # Pode optar por não aplicar o filtro ou retornar erro
+
+    # Aplicar filtro de data de fim
+    if filtro_data_fim_str:
+        try:
+            data_fim = datetime.strptime(filtro_data_fim_str, '%Y-%m-%d').date()
+            # Filtra registros onde data_cadastro é menor ou igual à data_fim
+            query = query.filter(db.func.date(Animal.data_cadastro) <= data_fim)
+        except ValueError:
+            flash("Formato de Data de Fim inválido. Use AAAA-MM-DD.", "warning")
+
+    # Ordena e executa a query
+    try:
+        animais = query.order_by(Animal.data_cadastro.desc(), Animal.nome).all() # Ordena por data (mais novo primeiro) e nome
+    except Exception as e:
+        flash(f"Erro ao buscar animais: {e}", "danger")
+        app.logger.error(f"Erro Listar Animais Query: {e}")
+        animais = []
+
+    return render_template('listar_animais.html', animais=animais)
 
 # --- Rota para Ver Detalhes ---
 @app.route('/animal/<int:animal_id>')
@@ -937,17 +981,53 @@ def cadastrar_adotante():
     return render_template('cadastrar_adotante.html',
                            form_data=None)
                            # animais_disponiveis=animais_disponiveis_para_interesse)
-@app.route('/listar_adotantes')
+
+@app.route('/listar_adotantes', methods=['GET']) # Adicionar GET explicitamente
 def listar_adotantes():
     if 'admin' not in session:
         return redirect(url_for('login'))
+
+    # Inicia a query base para Adotante
+    query = Adotante.query
+
+    # --- LER PARÂMETROS DE FILTRO DA URL ---
+    filtro_nome_adotante = request.args.get('filtro_nome_adotante', '').strip()
+    filtro_cpf_adotante = request.args.get('filtro_cpf_adotante', '').strip()
+    filtro_data_inicio_adotante_str = request.args.get('filtro_data_inicio_adotante', '').strip()
+    filtro_data_fim_adotante_str = request.args.get('filtro_data_fim_adotante', '').strip()
+
+    # --- APLICAR FILTROS À QUERY (SE FORNECIDOS) ---
+    if filtro_nome_adotante:
+        query = query.filter(Adotante.nome_completo.ilike(f'%{filtro_nome_adotante}%'))
+    if filtro_cpf_adotante:
+        # Para CPF, uma busca exata ou 'startswith' pode ser melhor que 'contains'
+        query = query.filter(Adotante.cpf.like(f'{filtro_cpf_adotante}%')) # Começa com...
+        # Ou exato: query = query.filter(Adotante.cpf == filtro_cpf_adotante)
+
+    # Aplicar filtro de data de início
+    if filtro_data_inicio_adotante_str:
+        try:
+            data_inicio = datetime.strptime(filtro_data_inicio_adotante_str, '%Y-%m-%d').date()
+            query = query.filter(db.func.date(Adotante.data_cadastro) >= data_inicio)
+        except ValueError:
+            flash("Formato de Data de Início (Adotante) inválido. Use AAAA-MM-DD.", "warning")
+
+    # Aplicar filtro de data de fim
+    if filtro_data_fim_adotante_str:
+        try:
+            data_fim = datetime.strptime(filtro_data_fim_adotante_str, '%Y-%m-%d').date()
+            query = query.filter(db.func.date(Adotante.data_cadastro) <= data_fim)
+        except ValueError:
+            flash("Formato de Data de Fim (Adotante) inválido. Use AAAA-MM-DD.", "warning")
+
+    # Ordena e executa a query
     try:
-        # Ordena por ID decrescente para mostrar os mais recentes primeiro
-        adotantes = Adotante.query.order_by(Adotante.id.desc()).all()
+        adotantes = query.order_by(Adotante.data_cadastro.desc(), Adotante.nome_completo).all()
     except Exception as e:
         flash(f"Erro ao buscar adotantes: {e}", "danger")
-        app.logger.error(f"Erro ao buscar adotantes: {e}")
+        app.logger.error(f"Erro Listar Adotantes Query: {e}")
         adotantes = []
+
     return render_template('listar_adotantes.html', adotantes=adotantes)
 
 # --- Rota para Ver Detalhes do Adotante ---
