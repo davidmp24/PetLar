@@ -1,6 +1,24 @@
 {% extends 'index.html' %}
 {% block title %}Detalhes de {{ adotante.nome_completo }}{% endblock %}
-{% block page_title %}Detalhes do Adotante{% endblock %}
+{% block page_title %}Detalhes do Adotante: {{ adotante.nome_completo }}{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+         crossorigin=""/>
+    <style>
+        #adotanteDetailMap { /* ID único para o mapa de detalhes do adotante */
+            height: 300px;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            background-color: #444;
+            border-radius: 5px;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,12 +27,16 @@
              <h3 class="text-light mb-0">{{ adotante.nome_completo }}</h3>
              <div>
                  <a href="{{ url_for('editar_adotante_form', adotante_id=adotante.id) }}" class="btn btn-warning me-2"><i class="fas fa-edit me-1"></i> Editar</a>
+                 <button type="button" class="btn btn-info me-2" onclick="window.print();">
+             <i class="fas fa-print me-1"></i> Imprimir Detalhes
+         </button>
                  <a href="{{ url_for('listar_adotantes') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
             </div>
         </div>
         <hr class="border-light">
 
-        <div class="row">
+        <div class="row shadow-lg bg-dark text-light printable-area ">
+            {# Coluna das Fotos do Adotante #}
             <div class="col-md-4 text-center mb-3">
                 <h5 class="text-info mb-2">Foto Pessoal</h5>
                 {% if adotante.foto_pessoal_filename %}
@@ -23,7 +45,7 @@
                     <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}" alt="Sem Foto Pessoal" class="img-fluid rounded mb-3" style="max-height: 200px; object-fit: contain; opacity: 0.7;">
                 {% endif %}
 
-                <h5 class="text-info mt-2 mb-2">Foto do Local</h5>
+                <h5 class="text-info mt-2 mb-2">Foto do Local de Habitação</h5>
                  {% if adotante.foto_local_filename %}
                     <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_local_filename) }}" alt="Foto do local de habitação" class="img-fluid rounded shadow" style="max-height: 200px; object-fit: cover;">
                 {% else %}
@@ -31,6 +53,7 @@
                 {% endif %}
             </div>
 
+            {# Coluna das Informações Textuais do Adotante #}
             <div class="col-md-8">
                 <div class="row">
                     <div class="col-lg-6">
@@ -40,13 +63,13 @@
                         <p><strong>CPF:</strong> {{ adotante.cpf }}</p>
                         <p><strong>Data Cadastro:</strong> {{ adotante.data_cadastro.strftime('%d/%m/%Y %H:%M') if adotante.data_cadastro else 'N/A' }}</p>
 
-                        <h5 class="text-info mt-3">Contato</h5>
-                        <p><strong>Endereço:</strong> {{ adotante.endereco }}</p>
+                        <h5 class="text-info mt-3">Endereço Principal</h5>
+                        <p><strong>Logradouro:</strong> {{ adotante.endereco }}</p>
                         <p><strong>Bairro:</strong> {{ adotante.bairro }}</p>
                         <p><strong>Cidade:</strong> {{ adotante.cidade }}</p>
                         <p><strong>CEP:</strong> {{ adotante.cep }}</p>
                         <p><strong>Telefone:</strong> {{ adotante.telefone }}</p>
-                        <p><strong>Email:</strong> {{ adotante.email }}</p>
+                        <p><strong>Email:</strong> <a href="mailto:{{ adotante.email }}" class="text-light">{{ adotante.email }}</a></p>
                     </div>
                      <div class="col-lg-6">
                          <h5 class="text-info">Interesse em Adoção (Registro Original)</h5>
@@ -55,26 +78,43 @@
                          <p><strong>Justificativa:</strong></p>
                          <p style="white-space: pre-wrap;">{{ adotante.justificativa_adocao or 'Não informado' }}</p>
 
-                         <h5 class="text-info mt-3">Questionário</h5>
+                         <h5 class="text-info mt-3">Sobre a Casa e Rotina</h5>
                          <p><strong>Possui outros animais?</strong> {{ adotante.tem_outros_animais }}</p>
                          {% if adotante.tem_outros_animais == 'Sim' %}
-                            <p><strong>Quantidade:</strong> {{ adotante.quantidade_animais or 'Não informado' }}</p>
+                            <p><strong>Quantidade:</strong> {{ adotante.quantidade_animais if adotante.quantidade_animais is not none else 'Não informado' }}</p>
                             <p><strong>Tipos:</strong> {{ adotante.tipos_animais or 'Não informado' }}</p>
                          {% endif %}
                          <p><strong>Tempo que animal ficaria sozinho (horas/dia):</strong> {{ adotante.tempo_sozinho if adotante.tempo_sozinho is not none else 'Não informado' }}</p>
                     </div>
                 </div>
+
+                 <!-- Localização da Residência no Mapa (SE VOCÊ ADICIONOU ESTA FUNCIONALIDADE AO ADOTANTE) -->
+                {% if adotante.latitude and adotante.longitude %}
+                    <hr class="border-light mt-3 mb-3">
+                    <h5 class="text-info">Localização da Residência (Mapa)</h5>
+                    <p><strong>Endereço Registrado (Mapa):</strong> {{ adotante.localizacao_mapa_texto or 'Não informado' }}</p>
+                    <p class="small text-muted">Coordenadas: Lat: {{ adotante.latitude|round(6) }}, Lng: {{ adotante.longitude|round(6) }}</p>
+                    <div id="adotanteDetailMap">Carregando mapa...</div> {# Div para o mapa #}
+                {% elif adotante.localizacao_mapa_texto %}
+                    <hr class="border-light mt-3 mb-3">
+                    <h5 class="text-info">Localização da Residência</h5>
+                    <p><strong>Endereço Registrado:</strong> {{ adotante.localizacao_mapa_texto }}</p>
+                    <p class="small text-muted">(Coordenadas não disponíveis para exibir no mapa)</p>
+                {% endif %}
             </div>
         </div>
 
         {# --- INÍCIO DA SEÇÃO DE ANIMAIS ADOTADOS --- #}
         <hr class="border-light mt-4 mb-3">
         <h4 class="text-info mb-3">Animais Adotados por {{ adotante.nome_completo }}</h4>
+        {# Verifica se a lista 'animais_adotados' não está vazia #}
         {% if adotante.animais_adotados %}
             <div class="list-group">
+                {# Loop para cada animal na lista de animais adotados pelo adotante #}
                 {% for animal_adotado in adotante.animais_adotados %}
                     <a href="{{ url_for('detalhes_animal', animal_id=animal_adotado.id) }}" class="list-group-item list-group-item-action list-group-item-dark d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
+                            {# Foto do animal adotado #}
                             {% if animal_adotado.foto_filename %}
                                 <img src="{{ url_for('static', filename='uploads/animais/' + animal_adotado.foto_filename) }}" alt="Foto de {{ animal_adotado.nome }}" class="img-thumbnail me-3" style="width: 40px; height: 40px; object-fit: cover;">
                             {% else %}
@@ -84,17 +124,55 @@
                                 <strong>{{ animal_adotado.nome }}</strong> ({{ animal_adotado.especie }})
                             </div>
                         </div>
-                        {# Você pode adicionar a data da adoção aqui se tiver esse campo no modelo Animal #}
-                        {# <small class="text-muted">{{ animal_adotado.data_adocao.strftime('%d/%m/%Y') if animal_adotado.data_adocao else '' }}</small> #}
-                        <span class="badge bg-primary rounded-pill">ID: {{ animal_adotado.id }}</span>
+                        <span class="badge bg-primary rounded-pill">ID do Animal: {{ animal_adotado.id }}</span>
                     </a>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-muted">Este adotante ainda não registrou nenhuma adoção no sistema.</p>
+            {# Mensagem se o adotante não tiver animais adotados vinculados #}
+            <p class="text-muted">Este adotante ainda não registrou nenhuma adoção no sistema ou os animais vinculados não estão mais disponíveis.</p>
         {% endif %}
         {# --- FIM DA SEÇÃO DE ANIMAIS ADOTADOS --- #}
 
     </div>
 </div>
+{% endblock %}
+
+{# Adicionar JS do Leaflet e script de inicialização para o mapa do adotante, se ele existir #}
+{% block scripts %}
+    {{ super() }}
+    {# Verifica se o mapa do adotante deve ser renderizado (se tem coordenadas) #}
+    {% if adotante.latitude and adotante.longitude %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mapElementAdotante = document.getElementById('adotanteDetailMap');
+            // As coordenadas são injetadas diretamente do objeto 'adotante' do Flask/Jinja2
+            const adotanteLat = parseFloat("{{ adotante.latitude if adotante.latitude is not none else 'NaN' }}");
+            const adotanteLng = parseFloat("{{ adotante.longitude if adotante.longitude is not none else 'NaN' }}");
+            // Usando 'e' para escapar o texto para JavaScript de forma segura
+            const adotanteLocationText = "{{ adotante.localizacao_mapa_texto | e if adotante.localizacao_mapa_texto else '' }}";
+
+            if (mapElementAdotante && !isNaN(adotanteLat) && !isNaN(adotanteLng)) {
+                const mapDetailAdotante = L.map('adotanteDetailMap').setView([adotanteLat, adotanteLng], 15); // Zoom inicial pode ser ajustado
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19
+                }).addTo(mapDetailAdotante);
+
+                let popupText = `Localização da Residência`;
+                if (adotanteLocationText) { // Verifica se o texto não é vazio (após escapar)
+                    popupText = `<b>${adotanteLocationText}</b><br>Lat: ${adotanteLat.toFixed(4)}, Lng: ${adotanteLng.toFixed(4)}`;
+                } else {
+                    popupText = `Lat: ${adotanteLat.toFixed(4)}, Lng: ${adotanteLng.toFixed(4)}`;
+                }
+
+                L.marker([adotanteLat, adotanteLng]).addTo(mapDetailAdotante)
+                    .bindPopup(popupText)
+                    .openPopup();
+            }
+        });
+    </script>
+    {% endif %} {# Fim do if para script do mapa do adotante #}
 {% endblock %}

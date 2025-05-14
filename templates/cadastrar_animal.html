@@ -1,272 +1,417 @@
-{% extends 'index.html' %} {# Herda a estrutura base #}
+{% extends 'index.html' %}
 
-{# Define o título da aba do navegador #}
 {% block title %}Cadastrar Novo Animal - PetLar{% endblock %}
-
-{# Define o título principal da página #}
 {% block page_title %}Cadastrar Novo Animal{% endblock %}
 
-{# Bloco para adicionar CSS específico (para o mapa) #}
 {% block head_extra %}
-<style>
-    #map-container { height: 400px; width: 100%; margin-bottom: 15px; border: 1px solid #555; background-color: #444; } /* Estilo básico para o mapa */
-</style>
+    {# CSS do Leaflet #}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+         crossorigin=""/>
+    <style>
+        #map {
+            height: 350px; /* Altura definida para o mapa */
+            width: 100%;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            background-color: #444; /* Cor de fundo enquanto carrega */
+            border-radius: 5px;
+        }
+        #preview-container img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: cover; /* Garante que a imagem cubra o espaço sem distorcer */
+        }
+    </style>
 {% endblock %}
 
-{# Bloco de conteúdo principal #}
 {% block content %}
-<div class="container mt-5"> {# Container principal #}
-    <h2 class="text-center text-light">Cadastrar Novo Animal</h2> {# Título da página #}
-    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card estilizado #}
-
-        {# Formulário com método POST e enctype para upload de arquivos #}
-        <form method="POST" enctype="multipart/form-data">
-
+<div class="container mt-5">
+    <h2 class="text-center text-light">Cadastrar Novo Animal</h2>
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        {# O enctype é crucial para uploads de arquivo #}
+        <form method="POST" enctype="multipart/form-data" id="animal-form">
             <!-- Seção: Informações Básicas do Animal -->
             <h4 class="text-light">Informações Básicas</h4>
             <div class="row mb-3">
-                {# ID/Código (Removido - será gerado pelo banco) #}
-                <div class="col-md-12"> {# Campo Nome #}
-                    <label for="nome" class="form-label">Nome</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Ex: Rex, Tom" value="{{ form_data.get('nome', '') if form_data else '' }}">
+                <div class="col-md-12">
+                    <label for="nome" class="form-label">Nome do Animal</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="nome" name="nome" required placeholder="Exemplo: Rex, Tom, Luna" value="{{ form_data.get('nome', '') if form_data else '' }}">
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6"> {# Campo Raça #}
-                    <label for="raca" class="form-label">Raça</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Ex: Labrador, Vira-lata" value="{{ form_data.get('raca', '') if form_data else '' }}">
-                </div>
-                <div class="col-md-6"> {# Campo Espécie #}
+                <div class="col-md-6">
                     <label for="especie" class="form-label">Espécie</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Ex: Cão, Gato" value="{{ form_data.get('especie', '') if form_data else '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="especie" name="especie" required placeholder="Exemplo: Cão, Gato, Pássaro" value="{{ form_data.get('especie', '') if form_data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="raca" class="form-label">Raça (Opcional)</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="raca" name="raca" placeholder="Exemplo: Labrador, Vira-lata, SRD" value="{{ form_data.get('raca', '') if form_data else '' }}">
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-6"> {# Campo Sexo #}
+                <div class="col-md-6">
                     <label for="sexo" class="form-label">Sexo</label>
                     <select class="form-select bg-secondary text-light" id="sexo" name="sexo" required>
-                        <option value="" disabled {% if not (form_data and form_data.get('sexo')) %}selected{% endif %}>Selecione</option>
+                        <option value="" disabled {% if not (form_data and form_data.get('sexo')) %}selected{% endif %}>Selecione...</option>
                         <option value="Macho" {% if form_data and form_data.get('sexo') == 'Macho' %}selected{% endif %}>Macho</option>
                         <option value="Fêmea" {% if form_data and form_data.get('sexo') == 'Fêmea' %}selected{% endif %}>Fêmea</option>
                     </select>
                 </div>
-                <div class="col-md-6"> {# Campo Idade #}
-                    <label for="idade" class="form-label">Idade</label>
-                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Ex: 2 (anos)" value="{{ form_data.get('idade', '') if form_data else '' }}">
+                <div class="col-md-6">
+                    <label for="idade" class="form-label">Idade (Aproximada)</label>
+                    <input type="number" class="form-control bg-secondary text-light" id="idade" name="idade" min="0" placeholder="Exemplo: 2 (anos)" value="{{ form_data.get('idade', '') if form_data else '' }}">
                 </div>
             </div>
-             <div class="mb-3"> {# Campo Descrição #}
-                <label for="descricao" class="form-label">Descrição Adicional</label>
+            <div class="mb-3">
+                <label for="descricao" class="form-label">Descrição Adicional (História, personalidade)</label>
                 <textarea class="form-control bg-secondary text-light" id="descricao" name="descricao" rows="3" placeholder="Alguma observação sobre o animal...">{{ form_data.get('descricao', '') if form_data else '' }}</textarea>
             </div>
 
             <!-- Seção: Características Comportamentais -->
             <h4 class="text-light mt-4">Comportamento</h4>
             <div class="row">
-                <div class="col-md-4 mb-3"> {# Campo Temperamento #}
+                <div class="col-md-4 mb-3">
                     <label for="temperamento" class="form-label">Temperamento</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Ex: Calmo, Agitado, Brincalhão" value="{{ form_data.get('temperamento', '') if form_data else '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="temperamento" name="temperamento" placeholder="Exemplo: Calmo, Agitado, Dócil" value="{{ form_data.get('temperamento', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-4 mb-3"> {# Campo Comportamento com Outros Animais #}
+                <div class="col-md-4 mb-3">
                     <label for="comportamento_outros" class="form-label">Com outros animais</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Ex: Sociável, Dominante, Medroso" value="{{ form_data.get('comportamento_outros', '') if form_data else '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_outros" name="comportamento_outros" placeholder="Exemplo: Sociável, Ignora, Medroso" value="{{ form_data.get('comportamento_outros', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-4 mb-3"> {# Campo Comportamento com Crianças #}
+                <div class="col-md-4 mb-3">
                     <label for="comportamento_criancas" class="form-label">Com crianças</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Ex: Bom, Necessita supervisão" value="{{ form_data.get('comportamento_criancas', '') if form_data else '' }}">
+                    <input type="text" class="form-control bg-secondary text-light" id="comportamento_criancas" name="comportamento_criancas" placeholder="Exemplo: Bom, Adora, Cauteloso" value="{{ form_data.get('comportamento_criancas', '') if form_data else '' }}">
                 </div>
             </div>
 
             <!-- Seção: Histórico Médico -->
             <h4 class="text-light mt-4">Histórico Médico</h4>
             <div class="row">
-                <div class="col-md-6 mb-3"> {# Campo Doenças Pré-existentes #}
-                    <label for="doencas_preexistentes" class="form-label">Doenças</label>
-                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Ex: Nenhuma conhecida, Alergia a ...">{{ form_data.get('doencas_preexistentes', '') if form_data else '' }}</textarea>
+                <div class="col-md-6 mb-3">
+                    <label for="doencas_preexistentes" class="form-label">Doenças Pré-existentes</label>
+                    <textarea class="form-control bg-secondary text-light" id="doencas_preexistentes" name="doencas_preexistentes" rows="2" placeholder="Exemplo: Nenhuma conhecida, Alergia a pulgas">{{ form_data.get('doencas_preexistentes', '') if form_data else '' }}</textarea>
                 </div>
-                <div class="col-md-6 mb-3"> {# Campo Tratamentos #}
-                    <label for="tratamentos" class="form-label">Tratamentos</label>
-                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Ex: Vermifugado, Castrado, Vacinas em dia">{{ form_data.get('tratamentos', '') if form_data else '' }}</textarea>
+                <div class="col-md-6 mb-3">
+                    <label for="tratamentos" class="form-label">Tratamentos Recebidos</label>
+                    <textarea class="form-control bg-secondary text-light" id="tratamentos" name="tratamentos" rows="2" placeholder="Exemplo: Vermifugado, Castrado(a), Vacinas V8/V10 em dia">{{ form_data.get('tratamentos', '') if form_data else '' }}</textarea>
                 </div>
             </div>
 
             <!-- Seção: Aparência Física -->
             <h4 class="text-light mt-4">Aparência</h4>
             <div class="row">
-                <div class="col-md-6 mb-3"> {# Campo Cor #}
-                    <label for="cor" class="form-label">Cor</label>
-                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Ex: Preto, Branco, Caramelo" value="{{ form_data.get('cor', '') if form_data else '' }}">
+                <div class="col-md-6 mb-3">
+                    <label for="cor" class="form-label">Cor Predominante</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="cor" name="cor" placeholder="Exemplo: Preto, Branco, Caramelo, Tricolor" value="{{ form_data.get('cor', '') if form_data else '' }}">
                 </div>
-                <div class="col-md-6 mb-3"> {# Campo Tamanho #}
+                <div class="col-md-6 mb-3">
                     <label for="tamanho" class="form-label">Tamanho</label>
                     <select class="form-select bg-secondary text-light" id="tamanho" name="tamanho">
-                        <option value="" disabled {% if not (form_data and form_data.get('tamanho')) %}selected{% endif %}>Selecione</option>
-                        <option value="Pequeno" {% if form_data and form_data.get('tamanho') == 'Pequeno' %}selected{% endif %}>Pequeno</option>
-                        <option value="Médio" {% if form_data and form_data.get('tamanho') == 'Médio' %}selected{% endif %}>Médio</option>
-                        <option value="Grande" {% if form_data and form_data.get('tamanho') == 'Grande' %}selected{% endif %}>Grande</option>
+                        <option value="" disabled {% if not (form_data and form_data.get('tamanho')) %}selected{% endif %}>Selecione...</option>
+                        <option value="Pequeno" {% if form_data and form_data.get('tamanho') == 'Pequeno' %}selected{% endif %}>Pequeno (até 10kg)</option>
+                        <option value="Médio" {% if form_data and form_data.get('tamanho') == 'Médio' %}selected{% endif %}>Médio (10kg a 25kg)</option>
+                        <option value="Grande" {% if form_data and form_data.get('tamanho') == 'Grande' %}selected{% endif %}>Grande (acima de 25kg)</option>
                     </select>
                 </div>
             </div>
 
             <!-- Seção: Localização com Mapa -->
-            <h4 class="text-light mt-4">Localização Encontrado/Abrigo</h4>
-             {# Input para busca de endereço (Opcional) #}
+            <h4 class="text-light mt-4">Localização (Onde foi encontrado ou onde está abrigado)</h4>
             <div class="mb-3">
-                 <label for="address-search" class="form-label">Buscar Endereço no Mapa</label>
-                 <input type="text" id="address-search" class="form-control form-control-sm bg-secondary text-light" placeholder="Digite um endereço para centralizar o mapa">
+                <label for="address-search" class="form-label">Buscar Endereço no Mapa</label>
+                {# --- INÍCIO DA MODIFICAÇÃO: INPUT GROUP --- #}
+                <div class="input-group">
+                    <input type="text" id="address-search" class="form-control form-control-sm bg-secondary text-light" placeholder="Digite um endereço (Ex: Rua Exemplo, Cidade)">
+                    <button class="btn btn-primary btn-sm" type="button" id="search-address-button">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                {# --- FIM DA MODIFICAÇÃO: INPUT GROUP --- #}
             </div>
-            {# Div onde o mapa será carregado #}
-            <div id="map-container">Carregando mapa...</div>
-            <small class="form-text text-muted mb-3 d-block">Clique no mapa para definir a localização ou arraste o marcador.</small>
-            {# Campo de texto original 'localizacao' (opcional, pode ser preenchido via JS) #}
+            <div id="map">Carregando mapa...</div>
+            <small class="form-text text-muted mb-3 d-block">Clique no mapa para definir a localização exata ou arraste o marcador. A busca acima também atualiza o mapa.</small>
+
             <div class="mb-3">
-                <label for="localizacao" class="form-label">Endereço (Texto)</label>
-                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" placeholder="Ex: Rua Exemplo, 123 - Bairro" value="{{ form_data.get('localizacao', '') if form_data else '' }}">
+                <label for="localizacao" class="form-label">Endereço Descritivo (Texto)</label>
+                <input type="text" class="form-control bg-secondary text-light" id="localizacao" name="localizacao" placeholder="Preenchido automaticamente pelo mapa ou digite aqui" value="{{ form_data.get('localizacao', '') if form_data else '' }}">
             </div>
-            {# Inputs ocultos para Latitude e Longitude #}
-            <input type="hidden" id="latitude" name="latitude" value="{{ form_data.get('latitude', '') if form_data else '' }}">
-            <input type="hidden" id="longitude" name="longitude" value="{{ form_data.get('longitude', '') if form_data else '' }}">
+            <input type="hidden" id="latitude" name="latitude" value="{{ (form_data.get('latitude') if form_data else '') or (initial_map_coords.lat if initial_map_coords and initial_map_coords.lat != -14.2350 else '') }}">
+            <input type="hidden" id="longitude" name="longitude" value="{{ (form_data.get('longitude') if form_data else '') or (initial_map_coords.lng if initial_map_coords and initial_map_coords.lng != -51.9253 else '') }}">
 
 
             <!-- Seção: Foto do Animal -->
-             <h4 class="text-light mt-4">Foto do Animal</h4>
-             <div class="mb-3">
-                 <label for="foto" class="form-label">Upload da Foto</label>
-                 <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewSingleImage(event)"> {# Função JS para preview #}
-             </div>
-             {# Container para o preview da imagem selecionada #}
-             <div id="preview-container" class="mb-3" style="display: none;">
-                 <p>Preview:</p>
-                 <img id="preview-image" src="" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
-                 <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeSingleImage()">Remover Foto</button> {# Função JS para remover #}
-             </div>
-
-             <!-- Botões de Ação -->
-             <div class="d-flex justify-content-between mt-4">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Cadastrar Animal</button>
-                <button type="reset" class="btn btn-secondary" onclick="resetAnimalForm()"><i class="fas fa-eraser me-1"></i> Limpar</button> {# Chama JS de reset #}
+            <h4 class="text-light mt-4">Foto do Animal</h4>
+            <div class="mb-3">
+                <label for="foto" class="form-label">Upload da Foto</label>
+                <input type="file" class="form-control bg-secondary text-light" id="foto" name="foto" accept="image/*" onchange="previewSingleImage(event)">
             </div>
-        </form> {# Fim do formulário #}
-    </div> {# Fim do card #}
-</div> {# Fim do container #}
+            <div id="preview-container" class="mb-3" style="display: none;"> {# Começa escondido #}
+                <p>Preview:</p>
+                <img id="preview-image" src="" class="img-thumbnail">
+                <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeSingleImage()">Remover Foto</button>
+            </div>
 
-{# Bloco de Scripts JS #}
+            <!-- Botões de Ação -->
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Cadastrar Animal</button>
+                <button type="reset" class="btn btn-secondary" onclick="resetAnimalForm()"><i class="fas fa-eraser me-1"></i> Limpar Formulário</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
 {% block scripts %}
-<script>
-    // --- Funções para Preview e Remoção de Imagem (Única) ---
-    function previewSingleImage(event) {
-        const input = event.target;
-        const previewContainer = document.getElementById('preview-container');
-        const previewImage = document.getElementById('preview-image');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) { previewImage.src = e.target.result; previewContainer.style.display = "block"; };
-            reader.readAsDataURL(input.files[0]);
-        } else {
-             previewContainer.style.display = "none"; previewImage.src = "";
-        }
-    }
-    function removeSingleImage() {
-        document.getElementById('foto').value = "";
-        document.getElementById('preview-image').src = "";
-        document.getElementById('preview-container').style.display = "none";
-    }
-    // Função para o botão Limpar
-    function resetAnimalForm() {
-        removeSingleImage(); // Limpa o preview da imagem
-        // Limpa os campos de localização e reseta o mapa (se o mapa e marcador estiverem definidos)
-        document.getElementById('localizacao').value = '';
-        document.getElementById('latitude').value = '';
-        document.getElementById('longitude').value = '';
-        if (typeof map !== 'undefined' && map) {
-            const defaultCenter = { lat: -14.2350, lng: -51.9253 }; // Centro do Brasil
-            map.setCenter(defaultCenter);
-            map.setZoom(4);
-            if (typeof marker !== 'undefined' && marker) {
-                marker.setMap(null); // Remove o marcador do mapa
+     {{ super() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Funções para Preview e Remoção de Imagem (apenas uma imagem neste formulário)
+        function previewSingleImage(event) {
+            const input = event.target;
+            const previewContainer = document.getElementById('preview-container');
+            const previewImage = document.getElementById('preview-image');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                previewContainer.style.display = "none";
+                previewImage.src = "";
             }
         }
-        // A limpeza dos outros campos é feita pelo type="reset"
-    }
 
-    function initMap() {
-    const mapContainer = document.getElementById("map-container");
-    if (!mapContainer) {
-        console.error('Elemento map-container não encontrado');
-        return;
-    }
-    const initialPosition = { lat: initialLat, lng: initialLng };
-    map = new google.maps.Map(mapContainer, {
-        center: initialPosition, zoom: initialZoom, mapTypeControl: false, streetViewControl: false
-    });
-
-    window.initMap = function() {
-        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-            console.error('Google Maps API não carregada');
-            return;
+        function removeSingleImage() {
+            document.getElementById('foto').value = ""; // Limpa o input file
+            document.getElementById('preview-image').src = "";
+            document.getElementById('preview-container').style.display = "none";
         }
-    // --- Funções do Google Maps ---
-    let map;
-    let marker;
-    // Tenta pegar coordenadas do form_data (se houver erro de validação), senão usa default
-    const initialLat = parseFloat("{{ form_data.get('latitude', -14.2350) if form_data else -14.2350 }}");
-    const initialLng = parseFloat("{{ form_data.get('longitude', -51.9253) if form_data else -51.9253 }}");
-    const initialZoom = (initialLat !== -14.2350) ? 15 : 4;
 
-    function initMap() {
-        const initialPosition = { lat: initialLat, lng: initialLng };
-        map = new google.maps.Map(document.getElementById("map-container"), {
-            center: initialPosition, zoom: initialZoom, mapTypeControl: false, streetViewControl: false
+        // Variáveis Globais para o Mapa
+        let map;
+        let marker;
+        const defaultLat = -14.2350; // Centro do Brasil (aproximado)
+        const defaultLng = -51.9253;
+        const defaultZoom = 4;
+        const selectedZoom = 16; // Zoom ao selecionar/buscar
+
+        // Função para Reset Completo do Formulário do Animal
+        function resetAnimalForm() {
+            // Limpa todos os campos do formulário (se o form tiver o ID correto)
+            const animalForm = document.getElementById('animal-form');
+            if(animalForm) {
+                animalForm.reset();
+            } else { // Fallback se o ID não estiver no form
+                 // Limpa campos de texto e selects manualmente (adapte aos seus IDs)
+                ['nome', 'especie', 'raca', 'idade', 'descricao', 'temperamento',
+                 'comportamento_outros', 'comportamento_criancas', 'doencas_preexistentes',
+                 'tratamentos', 'cor', 'localizacao', 'address-search'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = '';
+                 });
+                 const sexoSelect = document.getElementById('sexo');
+                 if(sexoSelect) sexoSelect.selectedIndex = 0; // Volta para "Selecione"
+                 const tamanhoSelect = document.getElementById('tamanho');
+                 if(tamanhoSelect) tamanhoSelect.selectedIndex = 0;
+            }
+
+
+            // Limpa o preview da imagem
+            removeSingleImage();
+
+            // Reseta o mapa para a visualização inicial e remove o marcador
+            if (map) { // Verifica se o mapa foi inicializado
+                map.setView([defaultLat, defaultLng], defaultZoom);
+                if (marker) { // Verifica se o marcador existe
+                    map.removeLayer(marker);
+                    marker = null; // Define o marcador como nulo para ser recriado no próximo clique
+                }
+            }
+            // Limpa os campos de coordenada
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+        }
+
+
+        // Função para inicializar o mapa
+        function initMap() {
+            // Tenta pegar lat/lng dos campos hidden (populados por Flask ou JS)
+            const formLatValue = document.getElementById('latitude').value;
+            const formLngValue = document.getElementById('longitude').value;
+
+            // Define as coordenadas iniciais: usa valores do form se existirem e forem válidos, senão usa padrão.
+            const initialLat = (formLatValue && !isNaN(parseFloat(formLatValue))) ? parseFloat(formLatValue) : defaultLat;
+            const initialLng = (formLngValue && !isNaN(parseFloat(formLngValue))) ? parseFloat(formLngValue) : defaultLng;
+            const initialZoomToUse = (initialLat !== defaultLat || initialLng !== defaultLng) ? selectedZoom : defaultZoom;
+
+            map = L.map('map').setView([initialLat, initialLng], initialZoomToUse);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Adiciona marcador inicial se lat/lng vierem do formulário e forem diferentes do padrão
+            if (initialLat !== defaultLat || initialLng !== defaultLng) {
+                marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+                marker.on('dragend', function(event) {
+                    updateCoordinates(event.target.getLatLng());
+                });
+                // Força uma atualização do campo de texto da localização se houver marcador inicial
+                updateAddressField(initialLat, initialLng);
+                marker.bindPopup(`Localização atual:<br>Lat: ${initialLat.toFixed(4)}, Lng: ${initialLng.toFixed(4)}`).openPopup();
+            }
+
+            map.on('click', function(e) {
+                const clickedLatLng = e.latlng;
+                if (marker) {
+                    marker.setLatLng(clickedLatLng);
+                } else {
+                    marker = L.marker(clickedLatLng, { draggable: true }).addTo(map);
+                    marker.on('dragend', function(event) {
+                        updateCoordinates(event.target.getLatLng());
+                    });
+                }
+                updateCoordinates(clickedLatLng);
+            });
+        }
+
+        // Função para atualizar coordenadas nos campos hidden e o campo de texto da localização
+        function updateCoordinates(latlng) {
+            const lat = latlng.lat.toFixed(6);
+            const lng = latlng.lng.toFixed(6);
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+
+            if (marker) {
+                marker.bindPopup(`Localização selecionada:<br>Lat: ${lat}, Lng: ${lng}`).openPopup();
+            }
+            updateAddressField(latlng.lat, latlng.lng);
+        }
+
+        // Função para buscar endereço via Nominatim e atualizar campo de texto
+        function updateAddressField(lat, lng) {
+             fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    let addressText = `Lat: ${parseFloat(lat).toFixed(4)}, Lng: ${parseFloat(lng).toFixed(4)}`; // Fallback
+                    if (data && data.display_name) {
+                        // Tenta montar um endereço mais amigável
+                        if (data.address) {
+                            const ad = data.address;
+                            const parts = [
+                                ad.road, ad.house_number, ad.suburb || ad.city_district,
+                                ad.city || ad.town || ad.village, ad.state, ad.postcode
+                            ];
+                            addressText = parts.filter(part => part).join(', ').replace(/, ,/g, ',').trim();
+                            if (!addressText) addressText = data.display_name; // Se não conseguiu montar, usa o display_name
+                        } else {
+                           addressText = data.display_name;
+                        }
+                    }
+                    document.getElementById('localizacao').value = addressText;
+                })
+                .catch(error => {
+                    console.error('Erro na geocodificação reversa:', error);
+                    document.getElementById('localizacao').value = `Lat: ${parseFloat(lat).toFixed(4)}, Lng: ${parseFloat(lng).toFixed(4)} (Erro ao buscar endereço)`;
+                });
+        }
+
+        // Event listener para a busca de endereço
+        document.getElementById('address-search').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Impede o submit do formulário principal
+                const query = this.value.trim();
+                if (!query) return;
+
+                fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const result = data[0];
+                            const lat = parseFloat(result.lat);
+                            const lon = parseFloat(result.lon);
+
+                            map.setView([lat, lon], selectedZoom); // Centraliza e dá zoom no resultado
+
+                            if (marker) {
+                                marker.setLatLng([lat, lon]);
+                            } else {
+                                marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+                                marker.on('dragend', function(e) {
+                                    updateCoordinates(e.target.getLatLng());
+                                });
+                            }
+                            updateCoordinates({ lat: lat, lng: lon }); // Atualiza campos hidden, popup e texto
+                        } else {
+                            alert('Endereço não encontrado. Tente refinar sua busca ou clique diretamente no mapa.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na busca de endereço:', error);
+                        alert('Ocorreu um erro ao buscar o endereço. Verifique sua conexão ou tente novamente.');
+                    });
+            }
         });
-        // Cria o marcador apenas se as coordenadas iniciais forem válidas (não o default)
-        if (initialLat !== -14.2350 || initialLng !== -51.9253) {
-             marker = new google.maps.Marker({ position: initialPosition, map: map, draggable: true, title: "Localização do animal" });
-             marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
-        } else {
-             marker = null; // Inicializa como nulo
+
+// --- INÍCIO DA MODIFICAÇÃO: LÓGICA DE BUSCA DE ENDEREÇO ---
+        // Função para realizar a busca do endereço
+        function performAddressSearch() {
+            const query = document.getElementById('address-search').value.trim();
+            if (!query) {
+                alert('Por favor, digite um endereço para buscar.');
+                return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        const lat = parseFloat(result.lat);
+                        const lon = parseFloat(result.lon);
+
+                        map.setView([lat, lon], selectedZoom); // selectedZoom é uma variável global definida antes
+
+                        if (marker) {
+                            marker.setLatLng([lat, lon]);
+                        } else {
+                            marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+                            marker.on('dragend', function(e) {
+                                updateCoordinates(e.target.getLatLng());
+                            });
+                        }
+                        updateCoordinates({ lat: lat, lng: lon }); // Atualiza campos hidden, popup e texto
+                    } else {
+                        alert('Endereço não encontrado. Tente refinar sua busca ou clique diretamente no mapa.');
+                        console.warn('Nenhum resultado encontrado para o endereço:', query);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na busca de endereço:', error);
+                    alert('Ocorreu um erro ao buscar o endereço. Verifique sua conexão ou tente novamente.');
+                });
         }
-        map.addListener("click", (event) => placeMarker(event.latLng));
 
-        // Lógica da Busca de Endereço
-        const searchInput = document.getElementById("address-search");
-        const searchBox = new google.maps.places.SearchBox(searchInput);
-        searchBox.addListener("places_changed", () => {
-            const places = searchBox.getPlaces();
-            if (places.length == 0) { return; }
-            const place = places[0];
-            if (!place.geometry || !place.geometry.location) { return; }
-            map.setCenter(place.geometry.location);
-            map.setZoom(16);
-            placeMarker(place.geometry.location); // Coloca/move o marcador
-            document.getElementById('localizacao').value = searchInput.value; // Atualiza campo texto
-         });
-    }
+        // Event listener para o clique no NOVO BOTÃO de busca
+        document.getElementById('search-address-button').addEventListener('click', performAddressSearch);
 
-    function placeMarker(location) {
-         if (!marker) { // Cria o marcador se ele não existir ainda
-              marker = new google.maps.Marker({ position: location, map: map, draggable: true, title: "Localização do animal" });
-              marker.addListener('dragend', (event) => updateCoordinates(event.latLng));
-         } else {
-              marker.setMap(map); // Garante que está visível
-              marker.setPosition(location); // Move para a nova posição
-         }
-         updateCoordinates(location); // Atualiza campos ocultos e texto
-    }
+        // Event listener para a tecla Enter no CAMPO de busca (mantém a funcionalidade)
+        document.getElementById('address-search').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Impede o submit do formulário principal
+                performAddressSearch(); // Chama a mesma função de busca
+            }
+        });
+        // --- FIM DA MODIFICAÇÃO: LÓGICA DE BUSCA DE ENDEREÇO ---
 
-    function updateCoordinates(location) {
-        document.getElementById('latitude').value = location.lat();
-        document.getElementById('longitude').value = location.lng();
-        // Geocoding reverso opcional
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: location })
-            .then((response) => { if (response.results[0]) { document.getElementById('localizacao').value = response.results[0].formatted_address; }})
-            .catch((e) => console.log("Geocoder falhou: " + e));
-    }
 
-</script>
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&v=weekly&libraries=places&callback=initMap">
-</script>
-{% endblock %} {# Fim do Bloco Scripts #}
-
-{% endblock %} {# Fim do Bloco Content #}
+        // Inicializar o mapa quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+        });
+    </script>
+{% endblock %}

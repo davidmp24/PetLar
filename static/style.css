@@ -350,3 +350,74 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     top: 0; /* Traz para a tela quando recebe foco */
 }
 
+/* Em static/style.css ou dentro de <style> no index.html */
+
+@media print {
+    /* Esconde o menu lateral na impressão */
+    .sidebar, nav.bg-dark.text-light.vh-100.p-3 { /* Seja específico para o seu menu lateral */
+        display: none !important;
+    }
+
+    /* Faz o conteúdo principal ocupar toda a largura na impressão */
+    main.main-content, main.flex-grow-1.p-4 {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 0 !important; /* Remove padding se necessário */
+    }
+
+    /* Esconde os botões de ação e outros elementos não desejados na impressão */
+    .btn, /* Esconde todos os botões Bootstrap */
+    .no-print, /* Adicione esta classe a qualquer elemento que você não quer imprimir */
+    a[href*="editar_"], /* Esconde links de edição */
+    a[href*="listar_"] /* Esconde links "Voltar para Lista" */
+    {
+        display: none !important;
+    }
+
+    /* Ajustes gerais para impressão */
+    body {
+        background-color: #fff !important; /* Fundo branco para impressão */
+        color: #000 !important; /* Texto preto para impressão */
+        font-size: 10pt; /* Tamanho de fonte adequado para impressão */
+        margin: 1cm; /* Margens da página */
+    }
+
+    .card {
+        border: 1px solid #ccc !important; /* Adiciona uma borda leve ao card na impressão */
+        box-shadow: none !important; /* Remove sombra */
+        background-color: #fff !important; /* Fundo branco para o card */
+    }
+
+    h1, h2, h3, h4, h5, h6, p, strong, span, div { /* Garante que o texto seja preto */
+        color: #000 !important;
+    }
+    .text-light, .text-info, .text-warning, .text-muted {
+         color: #000 !important; /* Força texto preto para classes de cor clara */
+    }
+    .badge {
+        border: 1px solid #000; /* Adiciona borda à badge para melhor visualização */
+    }
+    hr.border-light {
+        border-color: #ccc !important; /* Torna a linha horizontal mais visível */
+    }
+
+    /* Ajusta o tamanho das fotos para impressão, se necessário */
+    img.img-fluid, img.img-thumbnail {
+        max-width: 70% !important; /* Exemplo, ajuste conforme necessário */
+        height: auto !important;
+        page-break-inside: avoid; /* Tenta evitar que a imagem quebre entre páginas */
+    }
+
+    /* Evita quebras de página dentro de seções se possível */
+    .section, .card .row > div { /* .section é uma classe hipotética para suas seções de detalhes */
+        page-break-inside: avoid;
+    }
+
+    /* Se estiver usando o mapa Leaflet na página de detalhes, ele pode não imprimir bem.
+       Você pode optar por escondê-lo na impressão: */
+    #animalDetailMap, #adotanteDetailMap {
+        display: none !important; /* Esconde o mapa interativo na impressão */
+    }
+    /* Ou, se quiser tentar imprimir, ajuste o tamanho e remova controles interativos via CSS se possível,
+       mas a renderização de mapas interativos na impressão é geralmente problemática. */
+}

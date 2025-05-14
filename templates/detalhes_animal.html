@@ -1,21 +1,46 @@
 {% extends 'index.html' %}
 {% block title %}Detalhes de {{ animal.nome }}{% endblock %}
-{% block page_title %}Detalhes do Animal{% endblock %}
+{% block page_title %}Detalhes do Animal: {{ animal.nome }}{% endblock %}
+
+{# Adicionar CSS do Leaflet se não estiver no template base herdado #}
+{% block head_extra %}
+    {{ super() }} {# Para herdar qualquer coisa do head_extra do pai #}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+         crossorigin=""/>
+    <style>
+        #animalDetailMap {
+            height: 300px; /* Altura ajustável conforme necessidade */
+            width: 100%;
+            margin-top: 15px; /* Espaçamento acima do mapa */
+            margin-bottom: 20px; /* Espaçamento abaixo do mapa */
+            border: 1px solid #555;
+            background-color: #444; /* Cor de fundo enquanto carrega */
+            border-radius: 5px;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card p-4 shadow-lg bg-dark text-light">
         <div class="row">
-            <div class="col-md-4 text-center">
+            {# Coluna da Foto e Botões #}
+            <div class="col-md-4 text-center ">
                 {% if animal.foto_filename %}
                     <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-fluid rounded shadow mb-3" style="max-height: 300px; object-fit: cover;">
                 {% else %}
                     <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
                 {% endif %}
                  <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-edit me-1"></i> Editar Animal</a>
+                    <button type="button" class="btn btn-info w-100 mb-2" onclick="window.print();">
+        <i class="fas fa-print me-1"></i> Imprimir Detalhes
+    </button>
                  <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
             </div>
-            <div class="col-md-8">
+            
+            {# Coluna das Informações Textuais #}
+            <div class="col-md-8 shadow-lg bg-dark text-light printable-area">
                 <div class="d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">{{ animal.nome }}</h3>
                     <div>
@@ -27,6 +52,7 @@
                     </div>
                 </div>
                 <hr class="border-light">
+                {# ... (informações básicas, comportamento, saúde, descrição) ... #}
                 <div class="row">
                     <div class="col-lg-6">
                         <p><strong>ID:</strong> {{ animal.id }}</p>
@@ -38,7 +64,6 @@
                     <div class="col-lg-6">
                         <p><strong>Cor:</strong> {{ animal.cor or 'Não informado' }}</p>
                         <p><strong>Tamanho:</strong> {{ animal.tamanho or 'Não informado' }}</p>
-                        <p><strong>Localização Atual:</strong> {{ animal.localizacao or 'Não informado' }}</p>
                         <p><strong>Data Cadastro:</strong> {{ animal.data_cadastro.strftime('%d/%m/%Y %H:%M') if animal.data_cadastro else 'N/A' }}</p>
                     </div>
                 </div>
@@ -55,11 +80,28 @@
                 <h5 class="mt-3">Descrição Adicional</h5>
                 <p style="white-space: pre-wrap;">{{ animal.descricao or 'Nenhuma descrição adicional.' }}</p>
 
+                {# --- INÍCIO DA SEÇÃO DE LOCALIZAÇÃO E MAPA --- #}
+                <hr class="border-light mt-4 mb-3">
+                <h4 class="text-info mb-3">Localização Registrada</h4>
+                {% if animal.latitude and animal.longitude %}
+                    <p><strong>Endereço/Referência:</strong> {{ animal.localizacao or 'Não informado' }}</p>
+                    <p class="small text-muted">Coordenadas: Lat: {{ animal.latitude|round(6) }}, Lng: {{ animal.longitude|round(6) }}</p>
+                    <div id="animalDetailMap">Carregando mapa...</div> {# Div para o mapa de detalhes #}
+                {% elif animal.localizacao %}
+                    <p><strong>Endereço/Referência:</strong> {{ animal.localizacao }}</p>
+                    <p class="small text-muted">(Coordenadas não disponíveis para exibir no mapa)</p>
+                {% else %}
+                    <p class="text-muted">Nenhuma localização registrada para este animal.</p>
+                {% endif %}
+                {# --- FIM DA SEÇÃO DE LOCALIZAÇÃO E MAPA --- #}
+
+
                 {# --- INÍCIO DA SEÇÃO DE INFORMAÇÕES DO ADOTANTE (SE ADOTADO) --- #}
-                {% if animal.adotado and animal.adotante %} {# Verifica se está adotado E se tem um adotante vinculado #}
+                {# Condição principal: o animal deve estar marcado como adotado E ter um objeto adotante vinculado #}
+                {% if animal.adotado and animal.adotante %}
                     <hr class="border-light mt-4 mb-3">
                     <h4 class="text-info mb-3">Adotado Por:</h4>
-                    <div class="card list-group-item-dark p-3 rounded"> {# Usando um card para destacar #}
+                    <div class="card list-group-item-dark p-3 rounded">
                         <div class="d-flex align-items-center">
                              {% if animal.adotante.foto_pessoal_filename %}
                                 <img src="{{ url_for('static', filename='uploads/adotantes/' + animal.adotante.foto_pessoal_filename) }}" alt="Foto de {{ animal.adotante.nome_completo }}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%;">
@@ -68,6 +110,7 @@
                             {% endif %}
                             <div>
                                 <h5 class="mb-1">
+                                    {# Link para os detalhes do adotante #}
                                     <a href="{{ url_for('detalhes_adotante', adotante_id=animal.adotante.id) }}" class="text-light text-decoration-none">
                                         {{ animal.adotante.nome_completo }}
                                     </a>
@@ -77,17 +120,65 @@
                                 <p class="mb-0 small text-muted"><strong>Email:</strong> <a href="mailto:{{ animal.adotante.email }}" class="text-light">{{ animal.adotante.email }}</a></p>
                             </div>
                         </div>
-                        {# Você pode adicionar a data da adoção aqui se tiver esse campo no modelo Animal #}
+                        {# Se você tiver um campo data_adocao no modelo Animal, pode exibi-lo aqui #}
                         {# <p class="mt-2 mb-0 small text-muted">Data da Adoção: {{ animal.data_adocao.strftime('%d/%m/%Y') if animal.data_adocao else 'Não registrada' }}</p> #}
                     </div>
+                {# Caso especial: animal está marcado como adotado, mas não há um adotante vinculado #}
                 {% elif animal.adotado and not animal.adotante %}
                      <hr class="border-light mt-4 mb-3">
-                     <p class="text-warning">Este animal está marcado como adotado, mas não há um adotante vinculado no sistema.</p>
+                     <p class="text-warning">Este animal está marcado como adotado, mas não há um adotante vinculado no sistema. Isso pode ocorrer se o registro do adotante foi excluído.</p>
+                {# Se não estiver adotado, nada desta seção é exibido #}
                 {% endif %}
                 {# --- FIM DA SEÇÃO DE INFORMAÇÕES DO ADOTANTE --- #}
-
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{# Adicionar JS do Leaflet e script de inicialização #}
+{% block scripts %}
+    {{ super() }} {# Para herdar qualquer coisa do bloco scripts do pai #}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+         crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Verifica se temos coordenadas e o elemento do mapa existe
+            const mapElement = document.getElementById('animalDetailMap');
+            // As coordenadas são injetadas diretamente do objeto 'animal' do Flask/Jinja2
+            const animalLat = parseFloat("{{ animal.latitude if animal.latitude is not none else 'NaN' }}");
+            const animalLng = parseFloat("{{ animal.longitude if animal.longitude is not none else 'NaN' }}");
+            const animalLocationText = "{{ animal.localizacao | e }}"; // 'e' para escapar JS
+
+            if (mapElement && !isNaN(animalLat) && !isNaN(animalLng)) {
+                const mapDetail = L.map('animalDetailMap').setView([animalLat, animalLng], 15); // Zoom inicial pode ser ajustado
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19
+                }).addTo(mapDetail);
+
+                let popupText = `Localização Registrada`;
+                if (animalLocationText && animalLocationText !== 'None') { // Verifica se localizacao não é a string "None"
+                    popupText = `<b>${animalLocationText}</b><br>Lat: ${animalLat.toFixed(4)}, Lng: ${animalLng.toFixed(4)}`;
+                } else {
+                    popupText = `Lat: ${animalLat.toFixed(4)}, Lng: ${animalLng.toFixed(4)}`;
+                }
+
+                L.marker([animalLat, animalLng]).addTo(mapDetail)
+                    .bindPopup(popupText)
+                    .openPopup();
+
+                // Opcional: Desabilitar interação com o mapa se for apenas visualização
+                // mapDetail.dragging.disable();
+                // mapDetail.touchZoom.disable();
+                // mapDetail.doubleClickZoom.disable();
+                // mapDetail.scrollWheelZoom.disable();
+                // mapDetail.boxZoom.disable();
+                // mapDetail.keyboard.disable();
+                // if (mapDetail.tap) mapDetail.tap.disable();
+            }
+        });
+    </script>
 {% endblock %}
