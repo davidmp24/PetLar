@@ -1,105 +1,100 @@
-{% extends 'index.html' %} {# Herda a estrutura base #}
-
-{# Define o título da aba/janela do navegador #}
-{% block title %}Detalhes de {{ adotante.nome_completo }} - PetLar{% endblock %}
-
-{# Define o título principal da página #}
+{% extends 'index.html' %}
+{% block title %}Detalhes de {{ adotante.nome_completo }}{% endblock %}
 {% block page_title %}Detalhes do Adotante{% endblock %}
 
-{# Bloco de conteúdo principal #}
 {% block content %}
-<div class="container mt-4"> {# Container com margem superior #}
-    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card estilizado #}
-
-        {# Cabeçalho com nome e botões de ação #}
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap"> {# Flexbox para alinhamento #}
-             <h3 class="text-light mb-0 me-3">{{ adotante.nome_completo }}</h3> {# Nome do adotante #}
-             <div class="mt-2 mt-md-0"> {# Garante espaçamento em telas menores #}
-                 {# Botão para ir para a página de edição #}
+<div class="container mt-4">
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+             <h3 class="text-light mb-0">{{ adotante.nome_completo }}</h3>
+             <div>
                  <a href="{{ url_for('editar_adotante_form', adotante_id=adotante.id) }}" class="btn btn-warning me-2"><i class="fas fa-edit me-1"></i> Editar</a>
-                 <button type="button" class="btn btn-secondary me-2" onclick="window.print();">
-                    <i class="fas fa-print me-1"></i> Imprimir / Salvar
-                </button>
-                 {# Botão para voltar para a lista de adotantes #}
                  <a href="{{ url_for('listar_adotantes') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
             </div>
         </div>
-        <hr class="border-light mt-0 mb-4"> {# Divisor visual #}
+        <hr class="border-light">
 
-        {# Layout em duas colunas para melhor organização #}
         <div class="row">
-            <div class="row printable-area">
-            {# Coluna Esquerda: Fotos #}
-            <div class="col-lg-4 text-center mb-4 mb-lg-0">
+            <div class="col-md-4 text-center mb-3">
                 <h5 class="text-info mb-2">Foto Pessoal</h5>
                 {% if adotante.foto_pessoal_filename %}
-                    {# Exibe a foto pessoal se existir #}
-                    <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_pessoal_filename) }}" alt="Foto de {{ adotante.nome_completo }}" class="img-fluid rounded shadow mb-3" style="max-height: 300px; object-fit: cover;">
+                    <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_pessoal_filename) }}" alt="Foto de {{ adotante.nome_completo }}" class="img-fluid rounded shadow mb-3" style="max-height: 200px; object-fit: cover;">
                 {% else %}
-                    {# Exibe um placeholder se não houver foto pessoal #}
-                    <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}" alt="Sem Foto Pessoal" class="img-fluid rounded mb-3" style="max-height: 300px; max-width: 250px; object-fit: contain; opacity: 0.7;">
-                     {# Garanta que 'static/images/placeholder_adotante.png' exista #}
+                    <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}" alt="Sem Foto Pessoal" class="img-fluid rounded mb-3" style="max-height: 200px; object-fit: contain; opacity: 0.7;">
                 {% endif %}
 
-                <h5 class="text-info mt-3 mb-2">Foto do Local</h5>
+                <h5 class="text-info mt-2 mb-2">Foto do Local</h5>
                  {% if adotante.foto_local_filename %}
-                     {# Exibe a foto do local se existir #}
-                    <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_local_filename) }}" alt="Foto do local" class="img-fluid rounded shadow" style="max-height: 300px; object-fit: cover;">
+                    <img src="{{ url_for('static', filename='uploads/adotantes/' + adotante.foto_local_filename) }}" alt="Foto do local de habitação" class="img-fluid rounded shadow" style="max-height: 200px; object-fit: cover;">
                 {% else %}
-                     {# Exibe um placeholder se não houver foto do local #}
-                    <img src="{{ url_for('static', filename='images/placeholder_local.png') }}" alt="Sem Foto do Local" class="img-fluid rounded" style="max-height: 300px; max-width: 250px; object-fit: contain; opacity: 0.7;">
-                     {# Garanta que 'static/images/placeholder_local.png' exista #}
+                    <img src="{{ url_for('static', filename='images/placeholder_local.png') }}" alt="Sem Foto do Local" class="img-fluid rounded" style="max-height: 200px; object-fit: contain; opacity: 0.7;">
                 {% endif %}
             </div>
 
-            {# Coluna Direita: Informações textuais #}
-            <div class="col-lg-8">
-                {# Sub-colunas para organizar melhor as informações textuais #}
+            <div class="col-md-8">
                 <div class="row">
-                    <div class="col-md-6"> {# Primeira sub-coluna textual #}
+                    <div class="col-lg-6">
                         <h5 class="text-info">Informações Pessoais</h5>
                         <p><strong>ID:</strong> {{ adotante.id }}</p>
+                        <p><strong>RG:</strong> {{ adotante.rg }}</p>
+                        <p><strong>CPF:</strong> {{ adotante.cpf }}</p>
                         <p><strong>Data Cadastro:</strong> {{ adotante.data_cadastro.strftime('%d/%m/%Y %H:%M') if adotante.data_cadastro else 'N/A' }}</p>
-                        <p><strong>Nome Completo:</strong> {{ adotante.nome_completo }}</p>
-                        <p><strong>RG:</strong> {{ adotante.rg or 'Não informado' }}</p>
-                        <p><strong>CPF:</strong> {{ adotante.cpf or 'Não informado' }}</p>
 
-                        <h5 class="text-info mt-4">Contato</h5>
-                        <p><strong>Endereço:</strong> {{ adotante.endereco or 'Não informado' }}</p>
-                        <p><strong>Bairro:</strong> {{ adotante.bairro or 'Não informado' }}</p>
-                        <p><strong>Cidade:</strong> {{ adotante.cidade or 'Não informado' }}</p>
-                        <p><strong>CEP:</strong> {{ adotante.cep or 'Não informado' }}</p>
-                        <p><strong>Telefone:</strong> {{ adotante.telefone or 'Não informado' }}</p>
-                        <p><strong>Email:</strong> {{ adotante.email or 'Não informado' }}</p>
+                        <h5 class="text-info mt-3">Contato</h5>
+                        <p><strong>Endereço:</strong> {{ adotante.endereco }}</p>
+                        <p><strong>Bairro:</strong> {{ adotante.bairro }}</p>
+                        <p><strong>Cidade:</strong> {{ adotante.cidade }}</p>
+                        <p><strong>CEP:</strong> {{ adotante.cep }}</p>
+                        <p><strong>Telefone:</strong> {{ adotante.telefone }}</p>
+                        <p><strong>Email:</strong> {{ adotante.email }}</p>
                     </div>
-                     <div class="col-md-6"> {# Segunda sub-coluna textual #}
-                         <h5 class="text-info">Interesse em Adoção</h5>
-                         <p><strong>Animal de Interesse (Nome):</strong> {{ adotante.animal_interesse or 'Não informado' }}</p>
-                         <p><strong>Tipo de Animal:</strong> {{ adotante.tipo_animal_interesse or 'Não informado' }}</p>
+                     <div class="col-lg-6">
+                         <h5 class="text-info">Interesse em Adoção (Registro Original)</h5>
+                         <p><strong>Animal de Interesse (Nome):</strong> {{ adotante.animal_interesse }}</p>
+                         <p><strong>Tipo de Animal:</strong> {{ adotante.tipo_animal_interesse }}</p>
                          <p><strong>Justificativa:</strong></p>
-                         {# Usa white-space: pre-wrap para preservar quebras de linha da textarea #}
-                         <p style="white-space: pre-wrap; word-wrap: break-word;">{{ adotante.justificativa_adocao or 'Não informado' }}</p>
+                         <p style="white-space: pre-wrap;">{{ adotante.justificativa_adocao or 'Não informado' }}</p>
 
-                         <h5 class="text-info mt-4">Questionário</h5>
-                         <p><strong>Possui outros animais?</strong> {{ adotante.tem_outros_animais | capitalize or 'Não informado' }}</p> {# capitalize para 'Sim' ou 'Nao' #}
+                         <h5 class="text-info mt-3">Questionário</h5>
+                         <p><strong>Possui outros animais?</strong> {{ adotante.tem_outros_animais }}</p>
                          {% if adotante.tem_outros_animais == 'Sim' %}
                             <p><strong>Quantidade:</strong> {{ adotante.quantidade_animais or 'Não informado' }}</p>
                             <p><strong>Tipos:</strong> {{ adotante.tipos_animais or 'Não informado' }}</p>
                          {% endif %}
-                         <p><strong>Tempo sozinho (horas/dia):</strong> {{ adotante.tempo_sozinho if adotante.tempo_sozinho is not none else 'Não informado' }}</p>
-
-                         <h5 class="text-info mt-4">Crianças na Residência</h5>
-                         <p><strong>Possui crianças?</strong> {{ adotante.tem_criancas | capitalize or 'Não informado' }}</p>
-                         {% if adotante.tem_criancas == 'Sim' %}
-                            <p><strong>Quantidade:</strong> {{ adotante.quantidade_criancas or 'Não informado' }}</p>
-                            <p><strong>Idade(s):</strong> {{ adotante.idades_criancas or 'Não informado' }}</p>
-                            <p><strong>Restrições (ex: alergias):</strong></p>
-                             <p style="white-space: pre-wrap; word-wrap: break-word;">{{ adotante.restricoes_criancas or 'Nenhuma informada' }}</p>
-                         {% endif %}
+                         <p><strong>Tempo que animal ficaria sozinho (horas/dia):</strong> {{ adotante.tempo_sozinho if adotante.tempo_sozinho is not none else 'Não informado' }}</p>
                     </div>
                 </div>
-            </div> {# Fim da Coluna Direita #}
-        </div> {# Fim do row principal #}
-    </div> {# Fim do card #}
-</div> {# Fim do container #}
-{% endblock %} {# Fim do Bloco Content #}
+            </div>
+        </div>
+
+        {# --- INÍCIO DA SEÇÃO DE ANIMAIS ADOTADOS --- #}
+        <hr class="border-light mt-4 mb-3">
+        <h4 class="text-info mb-3">Animais Adotados por {{ adotante.nome_completo }}</h4>
+        {% if adotante.animais_adotados %}
+            <div class="list-group">
+                {% for animal_adotado in adotante.animais_adotados %}
+                    <a href="{{ url_for('detalhes_animal', animal_id=animal_adotado.id) }}" class="list-group-item list-group-item-action list-group-item-dark d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            {% if animal_adotado.foto_filename %}
+                                <img src="{{ url_for('static', filename='uploads/animais/' + animal_adotado.foto_filename) }}" alt="Foto de {{ animal_adotado.nome }}" class="img-thumbnail me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-thumbnail me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <strong>{{ animal_adotado.nome }}</strong> ({{ animal_adotado.especie }})
+                            </div>
+                        </div>
+                        {# Você pode adicionar a data da adoção aqui se tiver esse campo no modelo Animal #}
+                        {# <small class="text-muted">{{ animal_adotado.data_adocao.strftime('%d/%m/%Y') if animal_adotado.data_adocao else '' }}</small> #}
+                        <span class="badge bg-primary rounded-pill">ID: {{ animal_adotado.id }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">Este adotante ainda não registrou nenhuma adoção no sistema.</p>
+        {% endif %}
+        {# --- FIM DA SEÇÃO DE ANIMAIS ADOTADOS --- #}
+
+    </div>
+</div>
+{% endblock %}

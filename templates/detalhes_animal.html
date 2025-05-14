@@ -1,194 +1,93 @@
-{% extends 'index.html' %} {# Herda a estrutura base #}
-
-{# Define o título da aba/janela do navegador #}
-{% block title %}Detalhes de {{ animal.nome }} - PetLar{% endblock %}
-
-{# Define o título principal da página #}
+{% extends 'index.html' %}
+{% block title %}Detalhes de {{ animal.nome }}{% endblock %}
 {% block page_title %}Detalhes do Animal{% endblock %}
 
-{# Bloco para adicionar CSS específico (para o mapa) #}
-{% block head_extra %}
-<style>
-    /* Estilo para o container do mapa de detalhes */
-    #map-detail-container {
-        height: 300px; /* Altura do mapa */
-        width: 100%;   /* Largura total */
-        margin-top: 20px; /* Espaçamento acima */
-        border: 1px solid #555; /* Borda sutil */
-        background-color: #444; /* Fundo enquanto carrega */
-    }
-    /* Estilo para a área imprimível (já definido no style.css, mas pode reforçar aqui se necessário) */
-    /* @media print { ... } */
-</style>
-{% endblock %}
-
-{# Bloco de conteúdo principal #}
 {% block content %}
-<div class="container mt-4"> {# Container principal com margem superior #}
-    <div class="card p-4 shadow-lg bg-dark text-light"> {# Card estilizado #}
-        <div class="row"> {# Layout em linha para foto e informações #}
-
-            {# Coluna da Esquerda: Foto e Botões de Ação #}
-            <div class="col-lg-4 text-center mb-4 mb-lg-0">
-                {# Exibe a foto principal do animal ou um placeholder #}
+<div class="container mt-4">
+    <div class="card p-4 shadow-lg bg-dark text-light">
+        <div class="row">
+            <div class="col-md-4 text-center">
                 {% if animal.foto_filename %}
-                    <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-fluid rounded shadow mb-3" style="max-height: 350px; object-fit: cover;">
+                    <img src="{{ url_for('static', filename='uploads/animais/' + animal.foto_filename) }}" alt="Foto de {{ animal.nome }}" class="img-fluid rounded shadow mb-3" style="max-height: 300px; object-fit: cover;">
                 {% else %}
-                    <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-fluid rounded mb-3" style="max-height: 350px; max-width: 300px; object-fit: contain; opacity: 0.7;">
-                    {# Garanta que 'static/images/placeholder_animal.png' exista #}
+                    <img src="{{ url_for('static', filename='images/placeholder_animal.png') }}" alt="Sem Foto" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
                 {% endif %}
-
-                {# Botões de ação primários #}
-                <div class="mt-3 action-buttons"> {# Classe para ocultar na impressão #}
-                     {# Botão para ir para o formulário de edição #}
-                     <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-edit me-1"></i> Editar Ficha</a>
-                     {# Botão para imprimir/salvar a ficha #}
-                     <button type="button" class="btn btn-info w-100 mb-2" onclick="window.print();">
-                         <i class="fas fa-print me-1"></i> Imprimir / Salvar Ficha
-                     </button>
-                      {# Botão para voltar para a lista de animais #}
-                     <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
-                 </div>
-                 {# Botões de ação secundários (Excluir/Marcar Adoção) - Colocados aqui para melhor visibilidade #}
-                 <div class="d-flex justify-content-center flex-wrap gap-2 mt-3 action-buttons">
-                    {# Botão/Formulário para Excluir #}
-                    <form action="{{ url_for('excluir_animal', animal_id=animal.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir {{ animal.nome }} permanentemente? Esta ação não pode ser desfeita.');">
-                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir Animal">
-                            <i class="fas fa-trash me-1"></i> Excluir
-                        </button>
-                        {# CSRF token se aplicável #}
-                    </form>
-                    {# Botão/Formulário para Marcar Adotado/Disponível #}
-                    {% if not animal.adotado %}
-                        <form action="{{ url_for('marcar_adotado', animal_id=animal.id) }}" method="POST" style="display: inline;">
-                             <button type="submit" class="btn btn-sm btn-primary" title="Marcar como Adotado">
-                                 <i class="fas fa-check me-1"></i> Marcar Adotado
-                             </button>
-                             {# CSRF token se aplicável #}
-                        </form>
-                    {% else %}
-                        <form action="{{ url_for('marcar_disponivel', animal_id=animal.id) }}" method="POST" style="display: inline;">
-                             <button type="submit" class="btn btn-sm btn-success" title="Marcar como Disponível">
-                                 <i class="fas fa-undo me-1"></i> Marcar Disponível
-                             </button>
-                             {# CSRF token se aplicável #}
-                        </form>
-                    {% endif %}
-                 </div>
-            </div> {# Fim da Coluna da Esquerda #}
-
-            {# Coluna da Direita: Detalhes Textuais e Mapa #}
-            {# Adiciona a classe 'printable-area' para definir o que será impresso #}
-            <div class="col-lg-8 printable-area">
-
-                {# Título Principal com Status #}
-                <h3>{{ animal.nome }}
-                    {% if animal.adotado %}
-                        <span class="badge bg-secondary ms-2 align-middle">Adotado</span>
-                    {% else %}
-                        <span class="badge bg-success ms-2 align-middle">Disponível</span>
-                    {% endif %}
-                </h3>
+                 <a href="{{ url_for('editar_animal_form', animal_id=animal.id) }}" class="btn btn-warning w-100 mb-2"><i class="fas fa-edit me-1"></i> Editar Animal</a>
+                 <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Voltar para Lista</a>
+            </div>
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{ animal.nome }}</h3>
+                    <div>
+                        {% if animal.adotado %}
+                            <span class="badge bg-secondary fs-6">Adotado</span>
+                        {% else %}
+                            <span class="badge bg-success fs-6">Disponível</span>
+                        {% endif %}
+                    </div>
+                </div>
                 <hr class="border-light">
-
-                {# Seção: Informações Básicas #}
-                <h5 class="text-info">Informações Básicas</h5>
-                <div class="row mb-2">
-                    <div class="col-md-6">
+                <div class="row">
+                    <div class="col-lg-6">
                         <p><strong>ID:</strong> {{ animal.id }}</p>
-                        <p><strong>Data Cadastro:</strong> {{ animal.data_cadastro.strftime('%d/%m/%Y %H:%M') if animal.data_cadastro else 'N/A' }}</p>
-                        <p><strong>Espécie:</strong> {{ animal.especie or 'Não informado' }}</p>
+                        <p><strong>Espécie:</strong> {{ animal.especie }}</p>
                         <p><strong>Raça:</strong> {{ animal.raca or 'Não informado' }}</p>
-                    </div>
-                    <div class="col-md-6">
                         <p><strong>Sexo:</strong> {{ animal.sexo or 'Não informado' }}</p>
-                        <p><strong>Idade:</strong> {{ (animal.idade | string + ' anos') if animal.idade is not none else 'Não informado' }}</p> {# Exemplo de formatação #}
+                        <p><strong>Idade:</strong> {{ animal.idade if animal.idade is not none else 'Não informado' }}</p>
+                    </div>
+                    <div class="col-lg-6">
+                        <p><strong>Cor:</strong> {{ animal.cor or 'Não informado' }}</p>
+                        <p><strong>Tamanho:</strong> {{ animal.tamanho or 'Não informado' }}</p>
+                        <p><strong>Localização Atual:</strong> {{ animal.localizacao or 'Não informado' }}</p>
                         <p><strong>Data Cadastro:</strong> {{ animal.data_cadastro.strftime('%d/%m/%Y %H:%M') if animal.data_cadastro else 'N/A' }}</p>
                     </div>
                 </div>
-
-                {# Seção: Aparência #}
-                <h5 class="text-info mt-3">Aparência</h5>
-                <div class="row mb-2">
-                    <div class="col-md-6"><p><strong>Cor:</strong> {{ animal.cor or 'Não informado' }}</p></div>
-                    <div class="col-md-6"><p><strong>Tamanho:</strong> {{ animal.tamanho | capitalize or 'Não informado' }}</p></div> {# Capitalize para 'Pequeno', 'Médio', 'Grande' #}
-                </div>
-
-                 {# Seção: Comportamento #}
-                <h5 class="text-info mt-3">Comportamento</h5>
+                <hr class="border-light">
+                <h5 class="mt-3">Comportamento</h5>
                 <p><strong>Temperamento:</strong> {{ animal.temperamento or 'Não informado' }}</p>
                 <p><strong>Com outros animais:</strong> {{ animal.comportamento_outros or 'Não informado' }}</p>
                 <p><strong>Com crianças:</strong> {{ animal.comportamento_criancas or 'Não informado' }}</p>
+                <hr class="border-light">
+                <h5 class="mt-3">Saúde</h5>
+                <p><strong>Doenças Pré-existentes:</strong> {{ animal.doencas_preexistentes or 'Nenhuma' }}</p>
+                <p><strong>Tratamentos:</strong> {{ animal.tratamentos or 'Nenhum' }}</p>
+                <hr class="border-light">
+                <h5 class="mt-3">Descrição Adicional</h5>
+                <p style="white-space: pre-wrap;">{{ animal.descricao or 'Nenhuma descrição adicional.' }}</p>
 
-                {# Seção: Saúde #}
-                <h5 class="text-info mt-3">Saúde</h5>
-                <p><strong>Doenças Pré-existentes:</strong> {{ animal.doencas_preexistentes or 'Nenhuma conhecida' }}</p>
-                <p><strong>Tratamentos Recebidos:</strong> {{ animal.tratamentos or 'Nenhum informado' }}</p>
+                {# --- INÍCIO DA SEÇÃO DE INFORMAÇÕES DO ADOTANTE (SE ADOTADO) --- #}
+                {% if animal.adotado and animal.adotante %} {# Verifica se está adotado E se tem um adotante vinculado #}
+                    <hr class="border-light mt-4 mb-3">
+                    <h4 class="text-info mb-3">Adotado Por:</h4>
+                    <div class="card list-group-item-dark p-3 rounded"> {# Usando um card para destacar #}
+                        <div class="d-flex align-items-center">
+                             {% if animal.adotante.foto_pessoal_filename %}
+                                <img src="{{ url_for('static', filename='uploads/adotantes/' + animal.adotante.foto_pessoal_filename) }}" alt="Foto de {{ animal.adotante.nome_completo }}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/placeholder_adotante.png') }}" alt="Sem Foto Pessoal" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%;">
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-1">
+                                    <a href="{{ url_for('detalhes_adotante', adotante_id=animal.adotante.id) }}" class="text-light text-decoration-none">
+                                        {{ animal.adotante.nome_completo }}
+                                    </a>
+                                </h5>
+                                <p class="mb-0 small text-muted"><strong>CPF:</strong> {{ animal.adotante.cpf }}</p>
+                                <p class="mb-0 small text-muted"><strong>Telefone:</strong> {{ animal.adotante.telefone }}</p>
+                                <p class="mb-0 small text-muted"><strong>Email:</strong> <a href="mailto:{{ animal.adotante.email }}" class="text-light">{{ animal.adotante.email }}</a></p>
+                            </div>
+                        </div>
+                        {# Você pode adicionar a data da adoção aqui se tiver esse campo no modelo Animal #}
+                        {# <p class="mt-2 mb-0 small text-muted">Data da Adoção: {{ animal.data_adocao.strftime('%d/%m/%Y') if animal.data_adocao else 'Não registrada' }}</p> #}
+                    </div>
+                {% elif animal.adotado and not animal.adotante %}
+                     <hr class="border-light mt-4 mb-3">
+                     <p class="text-warning">Este animal está marcado como adotado, mas não há um adotante vinculado no sistema.</p>
+                {% endif %}
+                {# --- FIM DA SEÇÃO DE INFORMAÇÕES DO ADOTANTE --- #}
 
-                 {# Seção: Descrição Adicional #}
-                <h5 class="text-info mt-3">Descrição Adicional</h5>
-                {# Usa white-space: pre-wrap para preservar quebras de linha da textarea #}
-                <p style="white-space: pre-wrap; word-wrap: break-word;">{{ animal.descricao or 'Nenhuma descrição adicional fornecida.' }}</p>
-
-                 {# Seção: Localização Registrada (Mapa) #}
-                 {# Verifica se latitude e longitude existem e não são nulas #}
-                 {% if animal.latitude is not none and animal.longitude is not none %}
-                     <hr class="border-light"> {# Divisor antes do mapa #}
-                     <h5 class="mt-3 text-info">Localização Registrada</h5>
-                     {# Container onde o mapa será renderizado #}
-                     <div id="map-detail-container">Carregando mapa...</div>
-                     {# Exibe as coordenadas numéricas #}
-                     <p><small>Latitude: {{ animal.latitude }}, Longitude: {{ animal.longitude }}</small></p>
-                 {% else %}
-                     {# Mensagem se não houver coordenadas #}
-                     <hr class="border-light">
-                     <p class="text-muted mt-3"><i>Localização não registrada no mapa.</i></p>
-                 {% endif %}
-
-            </div> {# Fim da Coluna da Direita (printable-area) #}
-        </div> {# Fim do row principal #}
-    </div> {# Fim do card #}
-</div> {# Fim do container #}
-
-{# Bloco de Scripts JS (para o mapa de detalhes) #}
-{% block scripts %}
-{# Carrega o script do mapa APENAS se houver coordenadas válidas #}
-{% if animal.latitude is not none and animal.longitude is not none %}
-<script>
-    let mapDetail;       // Variável para o objeto do mapa
-    let markerDetail;    // Variável para o marcador no mapa
-
-    // Função de inicialização do mapa (será chamada pela API do Google Maps)
-    function initDetailMap() {
-        // Pega as coordenadas do animal passadas pelo template Jinja2
-        const position = { lat: {{ animal.latitude }}, lng: {{ animal.longitude }} };
-
-        // Cria o objeto do mapa dentro da div 'map-detail-container'
-        mapDetail = new google.maps.Map(document.getElementById("map-detail-container"), {
-            center: position,           // Centraliza o mapa na posição do animal
-            zoom: 15,                   // Nível de zoom inicial (mais próximo)
-            mapTypeControl: false,      // Desabilita controle de tipo de mapa (satélite, etc.)
-            streetViewControl: false,   // Desabilita o bonequinho do Street View
-            gestureHandling: 'cooperative', // Melhora interação em touchscreens e evita zoom acidental com scroll
-            draggable: false,           // Impede que o mapa seja arrastado
-            disableDoubleClickZoom: true, // Impede zoom com duplo clique
-            scrollwheel: false,          // Impede zoom com a roda do mouse
-            clickableIcons: false       // Desabilita cliques em POIs do Google
-        });
-
-        // Cria um marcador na posição do animal
-        markerDetail = new google.maps.Marker({
-            position: position,            // Posição do marcador
-            map: mapDetail,                // Associa o marcador ao mapa criado
-            title: "{{ animal.nome }} - Localização Registrada" // Texto que aparece ao passar o mouse
-        });
-    }
-</script>
-{# Carrega a API do Google Maps, chamando initDetailMap quando pronta - SUBSTITUA SUA_CHAVE_DE_API #}
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2oSv9MyJ1XRsKhwiacS9Z7ZP18WSWBNs&loading=async&callback=initDetailMap">
-</script>
-{% endif %} {# Fim do if para carregar script do mapa #}
-{% endblock %} {# Fim do Bloco Scripts #}
-
-{% endblock %} {# Fim do Bloco Content #}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
