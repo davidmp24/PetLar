@@ -109,10 +109,6 @@
             <!-- Informações sobre Interesse em Adoção -->
             <h4 class="text-light mt-4">Interesse em Adoção</h4>
             <div class="mb-3">
-                <label for="animal_interesse" class="form-label">Nome do Animal de Interesse (se houver)</label>
-                <input type="text" class="form-control bg-secondary text-light" id="animal_interesse" name="animal_interesse" value="{{ form_data.get('animal_interesse', '') if form_data else '' }}">
-            </div>
-            <div class="mb-3">
                 <label for="tipo_animal_interesse" class="form-label">Tipo de Animal de Interesse</label>
                 <select class="form-select bg-secondary text-light" id="tipo_animal_interesse" name="tipo_animal_interesse" required>
                     <option value="" disabled {% if not (form_data and form_data.get('tipo_animal_interesse')) %}selected{% endif %}>Selecione...</option>

@@ -78,29 +78,6 @@
 
             <!-- Seção: Interesse em Adoção -->
             <h4 class="text-light mt-4">Interesse em Adoção</h4>
-            <div class="mb-3"> {# Campo Animal de Interesse (AGORA É UM SELECT) #}
-                <label for="animal_interesse" class="form-label">Animal de Interesse</label>
-                <select class="form-select bg-secondary text-light" id="animal_interesse" name="animal_interesse" required>
-                    <option value="" disabled {% if not adotante.animal_interesse %}selected{% endif %}>
-                         --- Selecione um animal disponível ---
-                    </option>
-                     {# Loop nos animais disponíveis passados pela rota #}
-                    {% for animal in animais_disponiveis %}
-                        <option value="{{ animal.nome }}" {% if adotante.animal_interesse == animal.nome %}selected{% endif %}> {# Compara com o interesse atual do adotante #}
-                            {{ animal.nome }} ({{ animal.especie }} - {{ animal.raca or 'S/ Raça' }})
-                        </option>
-                    {% endfor %}
-                    {# Opcional: Adicionar o animal atual do adotante à lista mesmo que não esteja mais disponível? #}
-                    {# Exemplo: (Requer buscar 'animal_interesse_obj' na rota GET)
-                       {% if animal_interesse_obj and animal_interesse_obj.adotado and adotante.animal_interesse == animal_interesse_obj.nome %}
-                           <option value="{{ animal_interesse_obj.nome }}" selected class="text-warning">
-                               {{ animal_interesse_obj.nome }} (Indisponível)
-                           </option>
-                       {% endif %}
-                    #}
-                </select>
-                <small class="form-text text-muted">Se o animal de interesse anterior não estiver listado, ele pode não estar mais disponível.</small> {# Adiciona dica #}
-            </div>
             <div class="mb-3"> {# Campo Tipo de Animal de Interesse #}
                  {# Mantido, mas pode ser atualizado via JS #}
                 <label for="tipo_animal_interesse" class="form-label">Tipo de Animal de Interesse</label>
