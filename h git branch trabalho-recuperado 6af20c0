@@ -1,0 +1,20 @@
+[33m05aece1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: checkout: moving from 6af20c07d8ec254eeb87828290dbcbd1dce4b95a to main
+[33m6af20c0[m HEAD@{1}: commit: Att app 1.2.4 (correção de bugs)
+[33mf5de540[m HEAD@{2}: checkout: moving from main to f5de54098e18e9d7dc9e5bcbbd909349a5a0d3b0
+[33m05aece1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{3}: commit: Att Animal de interesse
+[33mf5de540[m HEAD@{4}: commit: Att app 1.2.3
+[33mcf01e5f[m HEAD@{5}: commit: att app 1.2.2
+[33mb37deb8[m HEAD@{6}: commit: Att detalhes-adotantes/animais
+[33m9daf317[m HEAD@{7}: commit: att filtro lista
+[33md8a0f88[m HEAD@{8}: commit: att app 1.2.1
+[33m2b1276f[m HEAD@{9}: commit: att render
+[33m02df4c1[m HEAD@{10}: pull --tags origin main: Fast-forward
+[33mf54d402[m HEAD@{11}: commit: att 1.3
+[33m220a6ff[m HEAD@{12}: commit: att 1.2
+[33m4bdadcd[m HEAD@{13}: commit: adic. map em cad. animal
+[33m5e93ff4[m HEAD@{14}: commit: Att e final. cad-animal/adotante
+[33mcb4e8a2[m HEAD@{15}: commit: Att cad. adotante 1.1
+[33m5c8b2a0[m HEAD@{16}: commit: att cad. adotante
+[33mfc8d02c[m HEAD@{17}: commit: add recurso test, atualizado pag cadr animais
+[33m82e5bbd[m HEAD@{18}: commit: Versão modifica - 1.0
+[33m9d00668[m HEAD@{19}: clone: from https://github.com/davidmp24/PetLar.git
