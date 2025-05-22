@@ -73,10 +73,10 @@
                     </div>
                      <div class="col-lg-6">
                          <h5 class="text-info">Interesse em Adoção (Registro Original)</h5>
-                         <p><strong>Tipo de Animal:</strong> {{ adotante.tipo_animal_interesse }}</p>
                          <p><strong>Justificativa:</strong></p>
                          <p style="white-space: pre-wrap;">{{ adotante.justificativa_adocao or 'Não informado' }}</p>
 
+                         
                          <h5 class="text-info mt-3">Sobre a Casa e Rotina</h5>
                          <p><strong>Possui outros animais?</strong> {{ adotante.tem_outros_animais }}</p>
                          {% if adotante.tem_outros_animais == 'Sim' %}
@@ -87,6 +87,18 @@
                     </div>
                 </div>
 
+                                        <!-- Seção: Crianças na Residência -->
+                        <hr class="border-light mt-3 mb-3"> {# Adiciona um divisor se já houver seções acima #}
+                        <h5 class="text-info">Crianças na Residência</h5>
+                        <p><strong>Há crianças na residência?</strong> {{ adotante.tem_criancas or 'Não informado' }}</p>
+                        {% if adotante.tem_criancas == 'Sim' %}
+                            <p><strong>Quantidade de crianças:</strong> {{ adotante.quantidade_criancas if adotante.quantidade_criancas is not none else 'Não informado' }}</p>
+                            <p><strong>Idade(s) da(s) criança(s):</strong> {{ adotante.idades_criancas or 'Não informado' }}</p>
+                            <p><strong>Restrições/Alergias das crianças:</strong> {{ adotante.restricoes_criancas or 'Nenhuma informada' }}</p>
+                        {% endif %}
+
+                    </div> {# Fim da col-lg-6 ou col-md-8 das informações textuais #}
+                </div> {# Fim do row principal das informações do adotante #}
                  <!-- Localização da Residência no Mapa (SE VOCÊ ADICIONOU ESTA FUNCIONALIDADE AO ADOTANTE) -->
                 {% if adotante.latitude and adotante.longitude %}
                     <hr class="border-light mt-3 mb-3">

@@ -99,8 +99,6 @@ class Adotante(db.Model):
     cep = db.Column(db.String(10), nullable=False)
     telefone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100), nullable=False)
-    animal_interesse = db.Column(db.String(100), nullable=False)
-    tipo_animal_interesse = db.Column(db.String(50), nullable=False)
     justificativa_adocao = db.Column(db.Text)
     tem_outros_animais = db.Column(db.String(3), nullable=False)
     tempo_sozinho = db.Column(db.Integer)
@@ -813,11 +811,32 @@ from flask import (
 # def remover_arquivo_se_existe(diretorio, nome_arquivo): ... # Lembre-se que atualizamos esta função
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
+import os
+import uuid # Necessário para nomes de arquivo únicos
+from werkzeug.utils import secure_filename # Necessário para nomes de arquivo seguros
+from flask import (
+    Flask, render_template, request, redirect, url_for, session, flash
+)
+# Certifique-se de que seus modelos (Adotante, Animal - se usado para algo) e o objeto db estão importados
+# Exemplo: from app import db, Adotante, Animal (substitua 'app' pelo nome real do seu arquivo)
+# from datetime import datetime # Se precisar de conversões de data manuais
+
+# Certifique-se de que as configurações e funções auxiliares estão definidas:
+# app.config['UPLOAD_FOLDER_ADOTANTES'] = os.path.join('static', 'uploads', 'adotantes')
+# os.makedirs(app.config['UPLOAD_FOLDER_ADOTANTES'], exist_ok=True)
+# ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+# def allowed_file(filename): ...
+# def remover_arquivo_se_existe(diretorio, nome_arquivo): ...
+
+# --- Rota para Cadastrar Adotante (GET e POST) ---
 @app.route('/cadastrar_adotante', methods=['GET', 'POST'])
 def cadastrar_adotante():
     # Verifica se o administrador está logado
     if 'admin' not in session:
         return redirect(url_for('login'))
+
+    # Coordenadas iniciais padrão para o mapa (para requisição GET)
+    initial_map_coords_adotante = {'lat': -14.2350, 'lng': -51.9253} # Centro do Brasil
 
     if request.method == 'POST':
         # --- Ler dados do formulário ---
@@ -830,21 +849,30 @@ def cadastrar_adotante():
         cep = request.form.get('cep')
         telefone = request.form.get('telefone')
         email = request.form.get('email')
-        animal_interesse = request.form.get('animal_interesse') # Nome do animal, pode ser um campo de texto
-        tipo_animal_interesse = request.form.get('tipo_animal_interesse') # Cão, Gato, etc.
+        # Os campos abaixo foram removidos do modelo Adotante, mas ainda lidos do form.
+        # Se não existem mais no form, remova a leitura.
+        # Se existem no form mas não no modelo, não serão salvos no Adotante().
+        animal_interesse_form = request.form.get('animal_interesse')
+        tipo_animal_interesse_form = request.form.get('tipo_animal_interesse')
         justificativa_adocao = request.form.get('justificativa_adocao')
-        tem_outros_animais = request.form.get('tem_outros_animais') # 'Sim' ou 'Nao'
+        tem_outros_animais = request.form.get('tem_outros_animais')
         tempo_sozinho_str = request.form.get('tempo_sozinho')
         quantidade_animais_str = request.form.get('quantidade_animais')
         tipos_animais = request.form.get('tipos_animais')
         foto_pessoal = request.files.get('foto_pessoal')
         foto_local = request.files.get('foto_local')
         localizacao_mapa_texto = request.form.get('localizacao_mapa_texto')
-        latitude_str = request.form.get('latitude') # Nome do campo hidden
-        longitude_str = request.form.get('longitude') # Nome do campo hidden
+        latitude_str = request.form.get('latitude')
+        longitude_str = request.form.get('longitude')
+        tem_criancas = request.form.get('tem_criancas')
+        quantidade_criancas_str = request.form.get('quantidade_criancas')
+        idades_criancas = request.form.get('idades_criancas')
+        restricoes_criancas = request.form.get('restricoes_criancas')
 
-        # Inicializa a lista de erros
+        # Inicializa a lista de erros e nomes de arquivos de foto
         erros = []
+        foto_pessoal_filename_salvar = None
+        foto_local_filename_salvar = None
 
         # --- Validações (campos obrigatórios, formato, unicidade, etc.) ---
         if not nome_completo: erros.append("Nome completo é obrigatório.")
@@ -860,21 +888,25 @@ def cadastrar_adotante():
             cpf_existente = Adotante.query.filter_by(cpf=cpf).first()
             if cpf_existente:
                 erros.append(f'O CPF "{cpf}" já está cadastrado para o adotante "{cpf_existente.nome_completo}".')
-        if not endereco: erros.append("Endereço é obrigatório.")
+
+        if not endereco: erros.append("Endereço (Logradouro) é obrigatório.")
         if not bairro: erros.append("Bairro é obrigatório.")
         if not cidade: erros.append("Cidade é obrigatória.")
         if not cep: erros.append("CEP é obrigatório.")
         if not telefone: erros.append("Telefone é obrigatório.")
-        if not email: erros.append("Email é obrigatório.") # Adicionar validação de formato de email
-        if not animal_interesse: erros.append("Nome do animal de interesse é obrigatório.")
-        if not tipo_animal_interesse: erros.append("Tipo de animal de interesse é obrigatório.")
+        if not email: erros.append("Email é obrigatório.")
+        # Como animal_interesse e tipo_animal_interesse foram removidos do modelo,
+        # a validação de obrigatoriedade deles também deve ser removida ou ajustada
+        # Se eles ainda são obrigatórios no formulário por algum motivo, a validação pode ficar,
+        # mas eles não serão salvos no objeto Adotante.
+        # if not animal_interesse_form: erros.append("Nome do animal de interesse é obrigatório.")
+        # if not tipo_animal_interesse_form: erros.append("Tipo de animal de interesse é obrigatório.")
         if not justificativa_adocao: erros.append("Justificativa da adoção é obrigatória.")
         if not tem_outros_animais: erros.append("Informe se possui outros animais na residência.")
-        # Validação de tempo_sozinho se fornecido
-        if tempo_sozinho_str and not tempo_sozinho_str.isdigit():
-             erros.append("Tempo sozinho deve ser um número de horas.")
+        if not tem_criancas: erros.append("Informe se há crianças na residência.")
 
-# --- Conversão e Validação de Coordenadas Geográficas (Adotante) ---
+
+        # --- Conversão e Validação de Coordenadas Geográficas (Adotante) ---
         latitude = None
         longitude = None
         if latitude_str and longitude_str:
@@ -893,41 +925,41 @@ def cadastrar_adotante():
         elif latitude_str or longitude_str:
             erros.append('Latitude e Longitude da residência devem ser fornecidas juntas ou ambas em branco.')
 
-        # (Opcional) Validação para localizacao_mapa_texto se coordenadas forem fornecidas
         if (latitude is not None and longitude is not None) and not localizacao_mapa_texto:
             erros.append("Descrição textual da localização do mapa é recomendada se coordenadas foram selecionadas.")
 
+
         # --- Processar Foto Pessoal ---
-        foto_pessoal_filename_salvar = None # Inicializa como None
         if foto_pessoal and foto_pessoal.filename != '':
             if allowed_file(foto_pessoal.filename):
-                nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_pessoal.filename}")
-                caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
+                nome_seguro_pessoal = secure_filename(f"{uuid.uuid4()}_{foto_pessoal.filename}")
+                caminho_pessoal = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro_pessoal)
                 try:
-                    foto_pessoal.save(caminho)
-                    foto_pessoal_filename_salvar = nome_seguro # Guarda nome se salvou
+                    foto_pessoal.save(caminho_pessoal)
+                    foto_pessoal_filename_salvar = nome_seguro_pessoal
                 except Exception as e:
                     erros.append(f"Erro ao salvar foto pessoal: {e}")
                     app.logger.error(f"Erro ao salvar foto pessoal: {e}")
             else:
-                erros.append(f"Tipo de arquivo não permitido para foto pessoal: {foto_pessoal.filename.rsplit('.',1)[-1] if '.' in foto_pessoal.filename else 'desconhecido'}")
+                ext_pessoal = foto_pessoal.filename.rsplit('.',1)[-1].lower() if '.' in foto_pessoal.filename else 'desconhecida'
+                erros.append(f"Tipo de arquivo não permitido para foto pessoal: .{ext_pessoal}")
 
         # --- Processar Foto do Local ---
-        foto_local_filename_salvar = None # Inicializa como None
         if foto_local and foto_local.filename != '':
             if allowed_file(foto_local.filename):
-                nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto_local.filename}")
-                caminho = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro)
+                nome_seguro_local = secure_filename(f"{uuid.uuid4()}_{foto_local.filename}")
+                caminho_local = os.path.join(app.config['UPLOAD_FOLDER_ADOTANTES'], nome_seguro_local)
                 try:
-                    foto_local.save(caminho)
-                    foto_local_filename_salvar = nome_seguro # Guarda nome se salvou
+                    foto_local.save(caminho_local)
+                    foto_local_filename_salvar = nome_seguro_local
                 except Exception as e:
                     erros.append(f"Erro ao salvar foto do local: {e}")
                     app.logger.error(f"Erro ao salvar foto do local: {e}")
             else:
-                erros.append(f"Tipo de arquivo não permitido para foto do local: {foto_local.filename.rsplit('.',1)[-1] if '.' in foto_local.filename else 'desconhecido'}")
+                ext_local = foto_local.filename.rsplit('.',1)[-1].lower() if '.' in foto_local.filename else 'desconhecida'
+                erros.append(f"Tipo de arquivo não permitido para foto do local: .{ext_local}")
 
-        # --- Conversão de Tipos e Validações Condicionais ---
+        # --- Conversão de Tipos e Validações Condicionais (Outros Animais) ---
         tempo_sozinho = None
         if tempo_sozinho_str:
             try:
@@ -935,14 +967,11 @@ def cadastrar_adotante():
                 if tempo_sozinho < 0:
                      erros.append('Tempo sozinho (horas) não pode ser negativo.')
             except ValueError:
-                # Erro já adicionado na validação inicial se não for digit
-                if "Tempo sozinho deve ser um número de horas." not in erros and "Tempo sozinho deve ser um número válido." not in erros :
+                if "Tempo sozinho deve ser um número de horas." not in erros and "Tempo sozinho deve ser um número válido." not in erros : # Evita duplicar msg
                     erros.append('Tempo sozinho (horas) deve ser um número válido.')
 
-
-        quantidade_animais_convertida = None # Renomeada para evitar confusão
-        tipos_animais_para_salvar = tipos_animais # Usa valor do form
-
+        quantidade_animais_convertida = None
+        tipos_animais_para_salvar = tipos_animais # Usa valor do form, será None se 'Nao' e campo estiver vazio
         if tem_outros_animais == 'Sim':
              if not quantidade_animais_str:
                  erros.append('Informe a quantidade de outros animais que possui.')
@@ -953,32 +982,55 @@ def cadastrar_adotante():
                          erros.append('Quantidade de outros animais deve ser pelo menos 1.')
                  except ValueError:
                      erros.append('Quantidade de outros animais deve ser um número válido.')
-
              if quantidade_animais_convertida is not None and quantidade_animais_convertida > 0 and not tipos_animais_para_salvar:
                  erros.append('Informe os tipos dos outros animais que possui.')
-
         elif tem_outros_animais == 'Nao':
             quantidade_animais_convertida = None
             tipos_animais_para_salvar = None
-        # else: erro já tratado em 'if not tem_outros_animais'
+
+        # --- Conversão de Tipos e Validações Condicionais (Crianças) ---
+        quantidade_criancas_convertida = None
+        idades_criancas_para_salvar = idades_criancas
+        restricoes_criancas_para_salvar = restricoes_criancas
+        if tem_criancas == 'Sim':
+            if not quantidade_criancas_str:
+                erros.append("Informe a quantidade de crianças.")
+            else:
+                try:
+                    quantidade_criancas_convertida = int(quantidade_criancas_str)
+                    if quantidade_criancas_convertida < 1:
+                        erros.append('Quantidade de crianças deve ser pelo menos 1.')
+                except ValueError:
+                    erros.append('Quantidade de crianças deve ser um número válido.')
+            if not idades_criancas_para_salvar:
+                 erros.append("Informe a(s) idade(s) da(s) criança(s).")
+        elif tem_criancas == 'Nao':
+            quantidade_criancas_convertida = None
+            idades_criancas_para_salvar = None
+            restricoes_criancas_para_salvar = None
 
 
         # --- Se houver erros (de validação ou upload), re-renderizar o formulário ---
         if erros:
-            # Tenta remover arquivos que podem ter sido salvos no disco ANTES de detectar o erro
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar)
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar)
+            for erro_msg in erros:
+                 flash(erro_msg, 'danger')
 
-            current_lat_adotante = request.form.get('latitude', -14.2350) # Pega do form se existir
-            current_lng_adotante = request.form.get('longitude', -51.9253)
-            map_coords_repopulate_adotante = {
-                'lat': float(current_lat_adotante) if current_lat_adotante else -14.2350,
-                'lng': float(current_lng_adotante) if current_lng_adotante else -51.9253
-            }
+            # Recalcula as coordenadas para repopular o mapa corretamente
+            current_lat_adotante = request.form.get('latitude', initial_map_coords_adotante['lat'])
+            current_lng_adotante = request.form.get('longitude', initial_map_coords_adotante['lng'])
+            try:
+                map_coords_repopulate_adotante = {
+                    'lat': float(current_lat_adotante) if current_lat_adotante else initial_map_coords_adotante['lat'],
+                    'lng': float(current_lng_adotante) if current_lng_adotante else initial_map_coords_adotante['lng']
+                }
+            except (ValueError, TypeError):
+                map_coords_repopulate_adotante = initial_map_coords_adotante
+
             return render_template('cadastrar_adotante.html',
                                    form_data=request.form,
                                    initial_map_coords_adotante=map_coords_repopulate_adotante)
-                                   # animais_disponiveis=animais_disponiveis_para_interesse) # Removido se não usado no form
 
         # --- Se tudo ok (sem erros), criar e salvar o objeto ---
         novo_adotante = Adotante(
@@ -991,23 +1043,21 @@ def cadastrar_adotante():
             cep=cep,
             telefone=telefone,
             email=email,
-            animal_interesse=animal_interesse,
-            tipo_animal_interesse=tipo_animal_interesse,
+            # animal_interesse e tipo_animal_interesse foram removidos do modelo
             justificativa_adocao=justificativa_adocao,
             tem_outros_animais=tem_outros_animais,
             tempo_sozinho=tempo_sozinho,
-            quantidade_animais=quantidade_animais_convertida, # Usa variável convertida
-            tipos_animais=tipos_animais_para_salvar,         # Usa variável tratada
-            # Removendo campos de crianças por enquanto
-            # tem_criancas=tem_criancas,
-            # quantidade_criancas=quantidade_criancas,
-            # idades_criancas=idades_criancas,
-            # restricoes_criancas=restricoes_criancas,
+            quantidade_animais=quantidade_animais_convertida,
+            tipos_animais=tipos_animais_para_salvar,
+            tem_criancas=tem_criancas,
+            quantidade_criancas=quantidade_criancas_convertida,
+            idades_criancas=idades_criancas_para_salvar,
+            restricoes_criancas=restricoes_criancas_para_salvar,
+            localizacao_mapa_texto=localizacao_mapa_texto,
+            latitude=latitude,
+            longitude=longitude,
             foto_pessoal_filename=foto_pessoal_filename_salvar,
-            foto_local_filename=foto_local_filename_salvar,
-            localizacao_mapa_texto=localizacao_mapa_texto, # Novo campo
-            latitude=latitude,                             # Novo campo
-            longitude=longitude,                           # Novo campo
+            foto_local_filename=foto_local_filename_salvar
         )
 
         try:
@@ -1018,28 +1068,33 @@ def cadastrar_adotante():
 
         except Exception as e:
             db.session.rollback()
-            # Tratar erros de integridade do DB (como UNIQUE constraint) de forma mais específica se necessário
+            msg_erro_db = f'Erro interno ao salvar o adotante: {str(e)}'
             if "UNIQUE constraint failed" in str(e):
                 if "adotante.cpf" in str(e):
-                    flash(f"Erro: O CPF '{cpf}' já está cadastrado. Por favor, verifique os dados.", 'danger')
+                    msg_erro_db = f"Erro: O CPF '{cpf}' já está cadastrado."
                 elif "adotante.rg" in str(e):
-                    flash(f"Erro: O RG '{rg}' já está cadastrado. Por favor, verifique os dados.", 'danger')
-                else:
-                    flash(f'Erro de integridade ao salvar no banco de dados: {e}', 'danger')
-            else:
-                flash(f'Erro interno ao salvar o adotante no banco de dados: {e}', 'danger')
-
+                    msg_erro_db = f"Erro: O RG '{rg}' já está cadastrado."
+            flash(msg_erro_db, 'danger')
             app.logger.error(f"Erro DB Insert Adotante: {e} - Dados: {request.form}")
 
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_salvar)
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_salvar)
 
+            current_lat_adotante = request.form.get('latitude', initial_map_coords_adotante['lat'])
+            current_lng_adotante = request.form.get('longitude', initial_map_coords_adotante['lng'])
+            try:
+                map_coords_repopulate_adotante = {
+                    'lat': float(current_lat_adotante) if current_lat_adotante else initial_map_coords_adotante['lat'],
+                    'lng': float(current_lng_adotante) if current_lng_adotante else initial_map_coords_adotante['lng']
+                }
+            except (ValueError, TypeError):
+                map_coords_repopulate_adotante = initial_map_coords_adotante
+
             return render_template('cadastrar_adotante.html',
-                                   form_data=request.form)
-                                   # animais_disponiveis=animais_disponiveis_para_interesse)
+                                   form_data=request.form,
+                                   initial_map_coords_adotante=map_coords_repopulate_adotante)
 
     # --- Requisição GET ---
-    initial_map_coords_adotante = {'lat': -14.2350, 'lng': -51.9253}
     return render_template('cadastrar_adotante.html',
                            form_data=None,
                            initial_map_coords_adotante=initial_map_coords_adotante)
@@ -1163,8 +1218,8 @@ def editar_adotante_submit(adotante_id):
         if cpf_existente:
             erros.append(f'O CPF "{cpf}" já está cadastrado para outro adotante ({cpf_existente.nome_completo}).')
     # ... (Adicione TODAS as outras validações obrigatórias) ...
-    if not tem_criancas: erros.append("Informe se há crianças na residência.")
- 
+
+
     latitude = adotante.latitude # Mantém valor antigo por padrão
     longitude = adotante.longitude # Mantém valor antigo por padrão
     if latitude_str and longitude_str: # Se novos valores foram enviados
@@ -1269,18 +1324,15 @@ def editar_adotante_submit(adotante_id):
     adotante.longitude = longitude
 
     # Lógica para campos condicionais (outros animais e crianças)
-    if adotante.tem_outros_animais == 'Sim':
-        adotante.quantidade_animais = quantidade_animais # Assumindo que 'quantidade_animais' foi convertido
-        adotante.tipos_animais = request.form.get('tipos_animais') # Lê novamente ou usa variável
+    adotante.tem_criancas = tem_criancas
+    if tem_criancas == 'Sim':
+        adotante.quantidade_criancas = quantidade_criancas # Usa o valor convertido/tratado
+        adotante.idades_criancas = idades_criancas
+        adotante.restricoes_criancas = restricoes_criancas # Pode ser None se não preenchido
     else:
-        adotante.quantidade_animais = None
-        adotante.tipos_animais = None
-
-    if adotante.tem_criancas == 'Sim':
-         adotante.quantidade_criancas = quantidade_criancas # Usa valor convertido
-    else:
-         adotante.quantidade_criancas = None
-         # idades_criancas e restricoes já foram atualizados acima
+        adotante.quantidade_criancas = None
+        adotante.idades_criancas = None
+        adotante.restricoes_criancas = None
 
     # --- Tenta salvar as alterações no banco de dados ---
     try:

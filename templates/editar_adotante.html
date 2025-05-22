@@ -78,17 +78,7 @@
 
             <!-- Seção: Interesse em Adoção -->
             <h4 class="text-light mt-4">Interesse em Adoção</h4>
-            <div class="mb-3"> {# Campo Tipo de Animal de Interesse #}
-                 {# Mantido, mas pode ser atualizado via JS #}
-                <label for="tipo_animal_interesse" class="form-label">Tipo de Animal de Interesse</label>
-                <select class="form-select bg-secondary text-light" id="tipo_animal_interesse" name="tipo_animal_interesse" required>
-                     <option value="" disabled {% if not adotante.tipo_animal_interesse %}selected{% endif %}>Selecione</option>
-                     <option value="Cachorro" {% if adotante.tipo_animal_interesse == 'Cachorro' %}selected{% endif %}>Cachorro</option>
-                     <option value="Gato" {% if adotante.tipo_animal_interesse == 'Gato' %}selected{% endif %}>Gato</option>
-                     <option value="Ave" {% if adotante.tipo_animal_interesse == 'Ave' %}selected{% endif %}>Ave</option>
-                     <option value="Outro" {% if adotante.tipo_animal_interesse == 'Outro' %}selected{% endif %}>Outro</option>
-                </select>
-            </div>
+            
             <div class="mb-3"> {# Campo Justificativa #}
                 <label for="justificativa_adocao" class="form-label">Por que você deseja adotar?</label>
                 <textarea class="form-control bg-secondary text-light" id="justificativa_adocao" name="justificativa_adocao" rows="3" required>{{ adotante.justificativa_adocao or '' }}</textarea> {# Preenche com valor existente #}
@@ -125,33 +115,32 @@
                 <input type="number" class="form-control bg-secondary text-light" id="tempo_sozinho" name="tempo_sozinho" min="0" placeholder="Ex: 4" value="{{ adotante.tempo_sozinho if adotante.tempo_sozinho is not none else '' }}"> {# Preenche com valor existente #}
             </div>
 
-             {# --- Sub-seção: Crianças na Residência --- #}
+             <!-- Seção: Informações sobre Crianças na Residência -->
+            <h4 class="text-light mt-4">Crianças na Residência</h4>
             <div class="mb-3">
-                <label class="form-label">Há crianças na residência?</label>
-                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tem_criancas" id="tem_criancas_sim" value="Sim" onclick="mostrarCamposCriancas()" {% if adotante.tem_criancas == 'Sim' %}checked{% endif %}> {# Marca opção existente #}
-                    <label class="form-check-label" for="tem_criancas_sim">Sim</label>
+                <label class="form-label">Há crianças que convivem regularmente na residência?</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tem_criancas" id="tem_criancas_sim_edit" value="Sim" onclick="mostrarCamposCriancasEdit()" {% if adotante.tem_criancas == 'Sim' %}checked{% endif %}>
+                    <label class="form-check-label" for="tem_criancas_sim_edit">Sim</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tem_criancas" id="tem_criancas_nao" value="Nao" onclick="esconderCamposCriancas()" {% if adotante.tem_criancas != 'Sim' %}checked{% endif %}> {# Marca opção existente #}
-                    <label class="form-check-label" for="tem_criancas_nao">Não</label>
+                    <input class="form-check-input" type="radio" name="tem_criancas" id="tem_criancas_nao_edit" value="Nao" onclick="esconderCamposCriancasEdit()" {% if adotante.tem_criancas == 'Nao' or not adotante.tem_criancas %}checked{% endif %}>
+                    <label class="form-check-label" for="tem_criancas_nao_edit">Não</label>
                 </div>
             </div>
-             {# Campos condicionais Crianças #}
-            <div id="campos_criancas" style="display: none;"> {# Visibilidade controlada por JS #}
-                 <div class="row">
-                     <div class="col-md-6 mb-3">
-                        <label for="quantidade_criancas" class="form-label">Quantas crianças?</label>
-                        <input type="number" class="form-control bg-secondary text-light" id="quantidade_criancas" name="quantidade_criancas" min="1" placeholder="Ex: 2" value="{{ adotante.quantidade_criancas if adotante.quantidade_criancas is not none else '' }}"> {# Preenche com valor existente #}
-                    </div>
-                     <div class="col-md-6 mb-3">
-                        <label for="idades_criancas" class="form-label">Idade(s) da(s) criança(s)</label>
-                        <input type="text" class="form-control bg-secondary text-light" id="idades_criancas" name="idades_criancas" placeholder="Ex: 5; 8 e 12 anos" value="{{ adotante.idades_criancas or '' }}"> {# Preenche com valor existente #}
-                    </div>
+
+            <div id="campos_criancas_edit" style="display: {% if adotante.tem_criancas == 'Sim' %}block{% else %}none{% endif %};">
+                <div class="mb-3">
+                    <label for="quantidade_criancas_edit" class="form-label">Quantidade de crianças</label>
+                    <input type="number" class="form-control bg-secondary text-light" id="quantidade_criancas_edit" name="quantidade_criancas" min="1" placeholder="Ex: 2" value="{{ adotante.quantidade_criancas if adotante.quantidade_criancas is not none else '' }}">
                 </div>
                 <div class="mb-3">
-                    <label for="restricoes_criancas" class="form-label">Há alguma restrição (Ex: alergias)?</label>
-                    <textarea class="form-control bg-secondary text-light" id="restricoes_criancas" name="restricoes_criancas" rows="2" placeholder="Descreva caso haja alguma restrição importante">{{ adotante.restricoes_criancas or '' }}</textarea> {# Preenche com valor existente #}
+                    <label for="idades_criancas_edit" class="form-label">Idade(s) da(s) criança(s)</label>
+                    <input type="text" class="form-control bg-secondary text-light" id="idades_criancas_edit" name="idades_criancas" placeholder="Ex: 2 anos, 5 anos" value="{{ adotante.idades_criancas or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="restricoes_criancas_edit" class="form-label">Restrições (alergias, medo) da(s) criança(s)? (Opcional)</label>
+                    <textarea class="form-control bg-secondary text-light" id="restricoes_criancas_edit" name="restricoes_criancas" rows="2" placeholder="Descreva se houver">{{ adotante.restricoes_criancas or '' }}</textarea>
                 </div>
             </div>
 
@@ -229,13 +218,26 @@
         // Não limpar campos aqui na edição ao esconder, apenas no reset ou via backend
     }
 
-    // --- Funções para Crianças ---
-    function mostrarCamposCriancas() { document.getElementById('campos_criancas').style.display = 'block'; }
-    function esconderCamposCriancas() {
-        const camposDiv = document.getElementById('campos_criancas');
-        camposDiv.style.display = 'none';
-         // Não limpar campos aqui na edição ao esconder, apenas no reset ou via backend
-    }
+        // Funções para campos condicionais "Crianças" na EDIÇÃO
+        function mostrarCamposCriancasEdit() {
+            document.getElementById('campos_criancas_edit').style.display = 'block';
+        }
+        function esconderCamposCriancasEdit() {
+            document.getElementById('campos_criancas_edit').style.display = 'none';
+        }
+
+        // No listener 'DOMContentLoaded' para a página de edição
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... (inicialização do mapa do adotante para edição) ...
+            // ... (lógica para mostrar/esconder campos de "outros animais" para edição) ...
+
+            // Lógica para mostrar/esconder campos de "crianças" na EDIÇÃO
+            if (document.getElementById('tem_criancas_sim_edit')?.checked) {
+                mostrarCamposCriancasEdit();
+            } else {
+                esconderCamposCriancasEdit();
+            }
+        });
 
     // --- Lógica no Carregamento da Página (para mostrar/ocultar campos corretamente na edição) ---
     document.addEventListener('DOMContentLoaded', function() {

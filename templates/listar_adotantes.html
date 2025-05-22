@@ -52,7 +52,6 @@
                         <th scope="col">CPF</th>
                         <th scope="col">Telefone</th>
                         <th scope="col">Email</th>
-                        <th scope="col">Animal Interesse</th>
                         <th scope="col">Cadastrado em</th> {# <-- NOVA COLUNA #}
                         <th scope="col" style="min-width: 150px;">Ações</th>
                     </tr>
@@ -72,7 +71,6 @@
                         <td>{{ adotante_item.cpf }}</td>
                         <td>{{ adotante_item.telefone }}</td>
                         <td>{{ adotante_item.email }}</td>
-                        <td>{{ adotante_item.animal_interesse }} ({{ adotante_item.tipo_animal_interesse }})</td>
                         <td>{{ adotante_item.data_cadastro.strftime('%d/%m/%Y') if adotante_item.data_cadastro else 'N/A' }}</td> {# <-- DADO DA NOVA COLUNA #}
                         <td>
                             <div class="d-flex flex-wrap gap-1">
