@@ -38,6 +38,7 @@ PetLar é um sistema web desenvolvido como parte do Projeto Integrador da UNIVES
 ### Detalhes do Animal
 ![Detalhes do Animal](images/detalhes-animal.png)
 
+O sistema PetLar pode ser acessado pelo link:  "https://petlar.onrender.com/login"
 
 ###🧱 Estrutura do Projeto: ###
 
