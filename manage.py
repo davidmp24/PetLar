@@ -1,7 +1,6 @@
-# manage.py
-from flask.cli import FlaskGroup
-from app import app  # Importe sua instância do Flask
 
+from flask.cli import FlaskGroup
+from app import app  
 cli = FlaskGroup(app)
 
 if __name__ == "__main__":

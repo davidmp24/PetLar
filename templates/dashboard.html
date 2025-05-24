@@ -149,22 +149,22 @@
 {# Bloco de Scripts para inicializar os gráficos #}
 {% block scripts %}
 <script>
-    // Dados passados pelo Flask (convertidos para JSON)
+
     const statusData = {{ stats_status | tojson }};
     const especieData = {{ dados_grafico_especie | tojson }};
 
-    // Gráfico de Status (Pizza)
+
     const statusCtx = document.getElementById('statusChart').getContext('2d');
     const statusChart = new Chart(statusCtx, {
-        type: 'doughnut', // Ou 'pie'
+        type: 'doughnut', 
         data: {
             labels: Object.keys(statusData),
             datasets: [{
                 label: 'Status dos Animais',
                 data: Object.values(statusData),
                 backgroundColor: [
-                    'rgba(40, 167, 69, 0.7)', // Verde para Disponível
-                    'rgba(108, 117, 125, 0.7)' // Cinza para Adotado
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(108, 117, 125, 0.7)' 
                 ],
                 borderColor: [
                     'rgba(40, 167, 69, 1)',
@@ -178,43 +178,43 @@
              plugins: {
                  legend: {
                      position: 'top',
-                     labels: { color: '#fff' } // Cor da legenda para tema escuro
+                     labels: { color: '#fff' } 
                  }
              }
         }
     });
 
-    // Gráfico por Espécie (Barras)
+
     const especieCtx = document.getElementById('especieChart').getContext('2d');
     const especieChart = new Chart(especieCtx, {
         type: 'bar',
         data: {
-            labels: especieData.map(item => item[0]), // Nomes das espécies
+            labels: especieData.map(item => item[0]), 
             datasets: [{
                 label: 'Quantidade por Espécie',
-                data: especieData.map(item => item[1]), // Contagens
-                backgroundColor: 'rgba(23, 162, 184, 0.7)', // Azul Info
+                data: especieData.map(item => item[1]), 
+                backgroundColor: 'rgba(23, 162, 184, 0.7)',
                 borderColor: 'rgba(23, 162, 184, 1)',
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
-            indexAxis: 'y', // Barras horizontais se preferir
+            indexAxis: 'y', 
             scales: {
-                x: { // Ou y se indexAxis for 'y'
+                x: { 
                     beginAtZero: true,
-                    ticks: { color: '#fff', stepSize: 1 }, // Cor e passo dos ticks
-                    grid: { color: 'rgba(255,255,255,0.1)' } // Cor da grade
+                    ticks: { color: '#fff', stepSize: 1 },
+                    grid: { color: 'rgba(255,255,255,0.1)' } 
                 },
-                 y: { // Ou x se indexAxis for 'y'
+                 y: { 
                      ticks: { color: '#fff' },
-                     grid: { display: false } // Oculta grade vertical
+                     grid: { display: false } 
                  }
             },
              plugins: {
                  legend: {
-                     display: false // Oculta legenda para gráfico de barras simples
+                     display: false 
                  }
              }
         }

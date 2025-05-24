@@ -20,12 +20,19 @@
             color: #c0c0c0; /* Clareia um pouco no hover/focus */
             text-decoration: underline;
         }
+        
+            .login-logo {
+        max-width: 150px; /* Defina a largura máxima desejada */
+        height: auto;    /* Mantém a proporção */
+        margin-bottom: 1.5rem; /* Espaço abaixo do logo */
+    }
     </style>
 </head>
 <body class="bg-dark text-white d-flex justify-content-center align-items-center vh-100">
 
     <div class="card p-4 shadow-lg" style="width: 100%; max-width: 400px; background-color: #1e1e1e; color: #fff;">
-        <h3 class="text-center mb-4">PetLar - Acesso Restrito</h3>
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo PetLar" class="login-logo mx-auto d-block">
+        <h3 class="text-center mb-4">Acesso Restrito</h3>
 
         {% if error %}
             <div class="alert alert-danger text-center" role="alert">{{ error }}</div>
@@ -44,7 +51,7 @@
         </form>
 
         {# --- BOTÃO E ÁREA COLAPSÁVEL --- #}
-        <div class="text-center mt-3"> {# Centraliza o botão #}
+        <div class="text-center mt-3"> 
             <button class="btn btn-link btn-link-muted" type="button" data-bs-toggle="collapse" data-bs-target="#forgotPasswordHelp" aria-expanded="false" aria-controls="forgotPasswordHelp">
                 Esqueceu seu usuário ou senha?
             </button>
@@ -52,7 +59,7 @@
 
         {# Div que será mostrada/ocultada pelo botão acima #}
         <div class="collapse mt-2" id="forgotPasswordHelp">
-            <div class="card card-body bg-secondary text-light" style="font-size: 0.9em;"> {# Card interno para destaque #}
+            <div class="card card-body bg-secondary text-light" style="font-size: 0.9em;"> 
                 Entre em contato com a equipe de desenvolvimento ou o administrador do sistema para solicitar a recuperação de suas credenciais.
                  {# Exemplo com contato:
                  <hr style='border-top-color: #555;'>

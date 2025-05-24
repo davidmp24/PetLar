@@ -144,23 +144,20 @@
          crossorigin=""></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Verifica se temos coordenadas e o elemento do mapa existe
             const mapElement = document.getElementById('animalDetailMap');
-            // As coordenadas são injetadas diretamente do objeto 'animal' do Flask/Jinja2
             const animalLat = parseFloat("{{ animal.latitude if animal.latitude is not none else 'NaN' }}");
             const animalLng = parseFloat("{{ animal.longitude if animal.longitude is not none else 'NaN' }}");
-            const animalLocationText = "{{ animal.localizacao | e }}"; // 'e' para escapar JS
+            const animalLocationText = "{{ animal.localizacao | e }}"; 
 
             if (mapElement && !isNaN(animalLat) && !isNaN(animalLng)) {
-                const mapDetail = L.map('animalDetailMap').setView([animalLat, animalLng], 15); // Zoom inicial pode ser ajustado
-
+                const mapDetail = L.map('animalDetailMap').setView([animalLat, animalLng], 15); 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                     maxZoom: 19
                 }).addTo(mapDetail);
 
                 let popupText = `Localização Registrada`;
-                if (animalLocationText && animalLocationText !== 'None') { // Verifica se localizacao não é a string "None"
+                if (animalLocationText && animalLocationText !== 'None') { 
                     popupText = `<b>${animalLocationText}</b><br>Lat: ${animalLat.toFixed(4)}, Lng: ${animalLng.toFixed(4)}`;
                 } else {
                     popupText = `Lat: ${animalLat.toFixed(4)}, Lng: ${animalLng.toFixed(4)}`;
@@ -170,14 +167,7 @@
                     .bindPopup(popupText)
                     .openPopup();
 
-                // Opcional: Desabilitar interação com o mapa se for apenas visualização
-                // mapDetail.dragging.disable();
-                // mapDetail.touchZoom.disable();
-                // mapDetail.doubleClickZoom.disable();
-                // mapDetail.scrollWheelZoom.disable();
-                // mapDetail.boxZoom.disable();
-                // mapDetail.keyboard.disable();
-                // if (mapDetail.tap) mapDetail.tap.disable();
+
             }
         });
     </script>

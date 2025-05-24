@@ -8,7 +8,7 @@
          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
          crossorigin=""/>
     <style>
-        #adotanteDetailMap { /* ID único para o mapa de detalhes do adotante */
+        #adotanteDetailMap { 
             height: 300px;
             width: 100%;
             margin-top: 10px;
@@ -99,7 +99,6 @@
 
                     </div> {# Fim da col-lg-6 ou col-md-8 das informações textuais #}
                 </div> {# Fim do row principal das informações do adotante #}
-                 <!-- Localização da Residência no Mapa (SE VOCÊ ADICIONOU ESTA FUNCIONALIDADE AO ADOTANTE) -->
                 {% if adotante.latitude and adotante.longitude %}
                     <hr class="border-light mt-3 mb-3">
                     <h5 class="text-info">Localização da Residência (Mapa)</h5>
@@ -158,14 +157,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const mapElementAdotante = document.getElementById('adotanteDetailMap');
-            // As coordenadas são injetadas diretamente do objeto 'adotante' do Flask/Jinja2
+
             const adotanteLat = parseFloat("{{ adotante.latitude if adotante.latitude is not none else 'NaN' }}");
             const adotanteLng = parseFloat("{{ adotante.longitude if adotante.longitude is not none else 'NaN' }}");
-            // Usando 'e' para escapar o texto para JavaScript de forma segura
+
             const adotanteLocationText = "{{ adotante.localizacao_mapa_texto | e if adotante.localizacao_mapa_texto else '' }}";
 
             if (mapElementAdotante && !isNaN(adotanteLat) && !isNaN(adotanteLng)) {
-                const mapDetailAdotante = L.map('adotanteDetailMap').setView([adotanteLat, adotanteLng], 15); // Zoom inicial pode ser ajustado
+                const mapDetailAdotante = L.map('adotanteDetailMap').setView([adotanteLat, adotanteLng], 15); 
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -173,7 +172,7 @@
                 }).addTo(mapDetailAdotante);
 
                 let popupText = `Localização da Residência`;
-                if (adotanteLocationText) { // Verifica se o texto não é vazio (após escapar)
+                if (adotanteLocationText) { 
                     popupText = `<b>${adotanteLocationText}</b><br>Lat: ${adotanteLat.toFixed(4)}, Lng: ${adotanteLng.toFixed(4)}`;
                 } else {
                     popupText = `Lat: ${adotanteLat.toFixed(4)}, Lng: ${adotanteLng.toFixed(4)}`;

@@ -9,7 +9,7 @@
          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
          crossorigin=""/>
     <style>
-        #mapAdotante { /* ID único para o mapa do adotante */
+        #mapAdotante { 
             height: 350px;
             width: 100%;
             margin-bottom: 15px;
@@ -234,9 +234,9 @@
         }
 
         function removeAdotanteImage(inputId, previewImageId, previewContainerId) {
-            document.getElementById(inputId).value = ""; // Limpa o input file
-            document.getElementById(previewImageId).src = ""; // Limpa o src da imagem de preview
-            document.getElementById(previewContainerId).style.display = "none"; // Esconde o container do preview
+            document.getElementById(inputId).value = ""; 
+            document.getElementById(previewImageId).src = ""; 
+            document.getElementById(previewContainerId).style.display = "none";
         }
 
         // Funções para campos condicionais "Outros Animais"
@@ -258,7 +258,7 @@
         // Função de Reset para Formulário do Adotante
         function resetAdotanteForm() {
             const adotanteForm = document.getElementById('adotante-form');
-            if(adotanteForm) adotanteForm.reset(); // Reseta campos de texto, selects, radios para o padrão HTML
+            if(adotanteForm) adotanteForm.reset(); 
 
             // Limpa previews de imagem
             removeAdotanteImage('foto_pessoal', 'preview-pessoal-adotante-image', 'preview-pessoal-adotante-container');
@@ -293,13 +293,13 @@
             if(addressSearchInput) addressSearchInput.value = '';
         }
 
-        // Variáveis Globais para o Mapa do Adotante
+      
         let mapAdotante;
         let markerAdotante;
-        const defaultLatAdotante = -14.2350; // Padrão: Centro do Brasil
+        const defaultLatAdotante = -14.2350; 
         const defaultLngAdotante = -51.9253;
-        const defaultZoomAdotante = 4; // Zoom para visualização geral
-        const selectedZoomAdotante = 16; // Zoom após busca ou clique
+        const defaultZoomAdotante = 4; 
+        const selectedZoomAdotante = 16; 
 
         // Função para inicializar o mapa do Adotante
         function initMapAdotante() {
@@ -319,7 +319,7 @@
             if (initialLat !== defaultLatAdotante || initialLng !== defaultLngAdotante) {
                 markerAdotante = L.marker([initialLat, initialLng], { draggable: true }).addTo(mapAdotante);
                 markerAdotante.on('dragend', function(event) { updateCoordinatesAdotante(event.target.getLatLng()); });
-                updateAddressFieldAdotante(initialLat, initialLng); // Tenta preencher o endereço baseado nas coords iniciais
+                updateAddressFieldAdotante(initialLat, initialLng); 
                 markerAdotante.bindPopup(`Localização atual:<br>Lat: ${initialLat.toFixed(4)}, Lng: ${initialLng.toFixed(4)}`).openPopup();
             }
 
@@ -335,7 +335,7 @@
             });
         }
 
-        // Função para atualizar coordenadas e o campo de texto do endereço do Adotante
+       
         function updateCoordinatesAdotante(latlng) {
             const lat = latlng.lat.toFixed(6);
             const lng = latlng.lng.toFixed(6);
@@ -345,24 +345,24 @@
             updateAddressFieldAdotante(latlng.lat, latlng.lng);
         }
 
-        // Função para buscar endereço via Nominatim e atualizar campo de texto do Adotante
+       
         function updateAddressFieldAdotante(lat, lng) {
              fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
                 .then(response => response.json())
                 .then(data => {
-                    let addressText = `Lat: ${parseFloat(lat).toFixed(4)}, Lng: ${parseFloat(lng).toFixed(4)}`; // Fallback
+                    let addressText = `Lat: ${parseFloat(lat).toFixed(4)}, Lng: ${parseFloat(lng).toFixed(4)}`; 
                     if (data && data.display_name) {
-                        if (data.address) { // Tenta montar um endereço mais amigável
+                        if (data.address) { 
                             const ad = data.address;
                             const parts = [
                                 ad.road, ad.house_number, ad.suburb || ad.city_district,
                                 ad.city || ad.town || ad.village, ad.state, ad.postcode
                             ];
-                            // Filtra partes vazias e junta com vírgula, limpando vírgulas extras
+                          
                             addressText = parts.filter(part => part).join(', ').replace(/, ,/g, ',').replace(/^,|, $/g, '').trim();
-                            if (!addressText) addressText = data.display_name; // Se não conseguiu montar, usa o display_name completo
+                            if (!addressText) addressText = data.display_name; 
                         } else {
-                           addressText = data.display_name; // Usa display_name se 'address' não estiver presente
+                           addressText = data.display_name; 
                         }
                     }
                     document.getElementById('localizacao_mapa_texto').value = addressText;
@@ -373,7 +373,7 @@
                 });
         }
 
-        // Função para realizar a busca de endereço para o mapa do Adotante
+        
         function performAddressSearchAdotante() {
             const query = document.getElementById('address-search-adotante').value.trim();
             if (!query) { alert('Por favor, digite um endereço para buscar.'); return; }
@@ -391,7 +391,7 @@
                             markerAdotante = L.marker([lat, lon], { draggable: true }).addTo(mapAdotante);
                             markerAdotante.on('dragend', function(e) { updateCoordinatesAdotante(e.target.getLatLng()); });
                         }
-                        updateCoordinatesAdotante({ lat: lat, lng: lon }); // Atualiza campos hidden, popup e texto
+                        updateCoordinatesAdotante({ lat: lat, lng: lon }); 
                     } else { alert('Endereço não encontrado. Tente refinar sua busca ou clique diretamente no mapa.'); }
                 })
                 .catch(error => {
@@ -399,17 +399,17 @@
                     alert('Ocorreu um erro ao buscar o endereço. Verifique sua conexão ou tente novamente.');
                 });
         }
-        // Event listener para o clique no botão de busca de endereço do Adotante
+    
         document.getElementById('search-address-button-adotante').addEventListener('click', performAddressSearchAdotante);
-        // Event listener para a tecla Enter no campo de busca de endereço do Adotante
+  
         document.getElementById('address-search-adotante').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Impede o submit do formulário principal
+                event.preventDefault(); 
                 performAddressSearchAdotante();
             }
         });
 
-        // Busca de CEP para Endereço Principal (função já existente e correta)
+       
         function buscarEnderecoPrincipal(cep) {
             const cepLimpo = cep.replace(/\D/g, '');
             if (cepLimpo.length !== 8) {
@@ -420,7 +420,7 @@
             fetch(`https://brasilapi.com.br/api/cep/v2/${cepLimpo}`)
                 .then(response => {
                     if (!response.ok) {
-                        // Limpa campos se CEP não encontrado
+                     
                         document.getElementById('endereco').value = '';
                         document.getElementById('bairro').value = '';
                         document.getElementById('cidade').value = '';
@@ -432,38 +432,38 @@
                     document.getElementById('endereco').value = data.street || '';
                     document.getElementById('bairro').value = data.neighborhood || '';
                     document.getElementById('cidade').value = data.city || '';
-                    document.getElementById('cep-error').textContent = ''; // Limpa mensagem de erro/buscando
+                    document.getElementById('cep-error').textContent = ''; 
                 })
                 .catch(error => {
                     console.error('Erro ao buscar CEP:', error);
-                    document.getElementById('cep-error').textContent = error.message; // Exibe a mensagem de erro
+                    document.getElementById('cep-error').textContent = error.message; 
                 });
         }
 
-        // Inicialização dos componentes quando o DOM estiver pronto
+      
         document.addEventListener('DOMContentLoaded', function() {
-            initMapAdotante(); // Inicializa o mapa do adotante
+            initMapAdotante();
 
-            // Lógica para mostrar/esconder campos de "outros animais"
+          
             const temOutrosSim = document.getElementById('tem_outros_animais_sim');
-            if (temOutrosSim?.checked) { // Adicionado '?' para segurança
+            if (temOutrosSim?.checked) { 
                 mostrarCamposOutrosAnimais();
             } else {
                 esconderCamposOutrosAnimais();
-                // Garante que 'Não' esteja marcado se 'Sim' não estiver (para repopulação)
+            
                 const temOutrosNao = document.getElementById('tem_outros_animais_nao');
                 if(temOutrosNao && !temOutrosSim?.checked && !temOutrosNao.checked) {
                     temOutrosNao.checked = true;
                 }
             }
 
-            // Lógica para mostrar/esconder campos de "crianças"
+           
             const temCriancasSim = document.getElementById('tem_criancas_sim');
-            if (temCriancasSim?.checked) { // Adicionado '?' para segurança
+            if (temCriancasSim?.checked) {
                 mostrarCamposCriancas();
             } else {
                 esconderCamposCriancas();
-                // Garante que 'Não' esteja marcado se 'Sim' não estiver (para repopulação)
+              
                 const temCriancasNao = document.getElementById('tem_criancas_nao');
                 if(temCriancasNao && !temCriancasSim?.checked && !temCriancasNao.checked) {
                     temCriancasNao.checked = true;

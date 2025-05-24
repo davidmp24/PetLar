@@ -14,11 +14,11 @@
 
         <form method="GET" action="{{ url_for('listar_animais') }}" class="mb-4">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3"> {# Ajustado para dar espaço aos filtros de data #}
+                <div class="col-md-3"> 
                     <label for="filtro_nome" class="form-label">Nome:</label>
                     <input type="text" class="form-control form-control-sm bg-secondary text-light" id="filtro_nome" name="filtro_nome" value="{{ request.args.get('filtro_nome', '') }}">
                 </div>
-                <div class="col-md-3"> {# Ajustado #}
+                <div class="col-md-3">
                     <label for="filtro_especie" class="form-label">Espécie:</label>
                     <input type="text" class="form-control form-control-sm bg-secondary text-light" id="filtro_especie" name="filtro_especie" value="{{ request.args.get('filtro_especie', '') }}">
                 </div>
@@ -34,7 +34,7 @@
                 {# --- FIM DOS FILTROS DE DATA --- #}
             </div>
             <div class="row mt-3">
-                <div class="col-md-12 text-end"> {# Botão agora em nova linha para melhor layout #}
+                <div class="col-md-12 text-end"> 
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i> Filtrar</button>
                     {# Botão para limpar filtros #}
                     <a href="{{ url_for('listar_animais') }}" class="btn btn-secondary btn-sm"><i class="fas fa-times me-1"></i> Limpar Filtros</a>
@@ -42,7 +42,6 @@
             </div>
         </form>
 
-        {# ... (resto da tabela como antes) ... #}
         {% if animais %}
         <div class="table-responsive">
             <table class="table table-dark table-striped table-hover align-middle">

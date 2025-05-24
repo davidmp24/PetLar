@@ -215,10 +215,8 @@
     function esconderCamposAnimais() {
         const camposDiv = document.getElementById('campos_animais');
         camposDiv.style.display = 'none';
-        // Não limpar campos aqui na edição ao esconder, apenas no reset ou via backend
     }
 
-        // Funções para campos condicionais "Crianças" na EDIÇÃO
         function mostrarCamposCriancasEdit() {
             document.getElementById('campos_criancas_edit').style.display = 'block';
         }
@@ -226,12 +224,8 @@
             document.getElementById('campos_criancas_edit').style.display = 'none';
         }
 
-        // No listener 'DOMContentLoaded' para a página de edição
         document.addEventListener('DOMContentLoaded', function() {
-            // ... (inicialização do mapa do adotante para edição) ...
-            // ... (lógica para mostrar/esconder campos de "outros animais" para edição) ...
 
-            // Lógica para mostrar/esconder campos de "crianças" na EDIÇÃO
             if (document.getElementById('tem_criancas_sim_edit')?.checked) {
                 mostrarCamposCriancasEdit();
             } else {
@@ -239,7 +233,6 @@
             }
         });
 
-    // --- Lógica no Carregamento da Página (para mostrar/ocultar campos corretamente na edição) ---
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('tem_outros_animais_sim')?.checked) { mostrarCamposAnimais(); } else { esconderCamposAnimais(); }
         if (document.getElementById('tem_criancas_sim')?.checked) { mostrarCamposCriancas(); } else { esconderCamposCriancas(); }

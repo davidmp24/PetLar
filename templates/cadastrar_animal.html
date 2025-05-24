@@ -10,17 +10,17 @@
          crossorigin=""/>
     <style>
         #map {
-            height: 350px; /* Altura definida para o mapa */
+            height: 350px; 
             width: 100%;
             margin-bottom: 15px;
             border: 1px solid #555;
-            background-color: #444; /* Cor de fundo enquanto carrega */
+            background-color: #444; 
             border-radius: 5px;
         }
         #preview-container img {
             max-width: 150px;
             max-height: 150px;
-            object-fit: cover; /* Garante que a imagem cubra o espaço sem distorcer */
+            object-fit: cover; 
         }
     </style>
 {% endblock %}
@@ -166,7 +166,7 @@
      {{ super() }}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-        // Funções para Preview e Remoção de Imagem (apenas uma imagem neste formulário)
+      
         function previewSingleImage(event) {
             const input = event.target;
             const previewContainer = document.getElementById('preview-container');
@@ -185,27 +185,27 @@
         }
 
         function removeSingleImage() {
-            document.getElementById('foto').value = ""; // Limpa o input file
+            document.getElementById('foto').value = ""; 
             document.getElementById('preview-image').src = "";
             document.getElementById('preview-container').style.display = "none";
         }
 
-        // Variáveis Globais para o Mapa
+        
         let map;
         let marker;
-        const defaultLat = -14.2350; // Centro do Brasil (aproximado)
+        const defaultLat = -14.2350; 
         const defaultLng = -51.9253;
         const defaultZoom = 4;
-        const selectedZoom = 16; // Zoom ao selecionar/buscar
+        const selectedZoom = 16;
 
-        // Função para Reset Completo do Formulário do Animal
+       
         function resetAnimalForm() {
-            // Limpa todos os campos do formulário (se o form tiver o ID correto)
+           
             const animalForm = document.getElementById('animal-form');
             if(animalForm) {
                 animalForm.reset();
-            } else { // Fallback se o ID não estiver no form
-                 // Limpa campos de texto e selects manualmente (adapte aos seus IDs)
+            } else { 
+                
                 ['nome', 'especie', 'raca', 'idade', 'descricao', 'temperamento',
                  'comportamento_outros', 'comportamento_criancas', 'doencas_preexistentes',
                  'tratamentos', 'cor', 'localizacao', 'address-search'].forEach(id => {
@@ -213,36 +213,36 @@
                     if(el) el.value = '';
                  });
                  const sexoSelect = document.getElementById('sexo');
-                 if(sexoSelect) sexoSelect.selectedIndex = 0; // Volta para "Selecione"
+                 if(sexoSelect) sexoSelect.selectedIndex = 0; 
                  const tamanhoSelect = document.getElementById('tamanho');
                  if(tamanhoSelect) tamanhoSelect.selectedIndex = 0;
             }
 
 
-            // Limpa o preview da imagem
+         
             removeSingleImage();
 
-            // Reseta o mapa para a visualização inicial e remove o marcador
-            if (map) { // Verifica se o mapa foi inicializado
+ 
+            if (map) { 
                 map.setView([defaultLat, defaultLng], defaultZoom);
-                if (marker) { // Verifica se o marcador existe
+                if (marker) { 
                     map.removeLayer(marker);
-                    marker = null; // Define o marcador como nulo para ser recriado no próximo clique
+                    marker = null; 
                 }
             }
-            // Limpa os campos de coordenada
+
             document.getElementById('latitude').value = '';
             document.getElementById('longitude').value = '';
         }
 
 
-        // Função para inicializar o mapa
+
         function initMap() {
-            // Tenta pegar lat/lng dos campos hidden (populados por Flask ou JS)
+           
             const formLatValue = document.getElementById('latitude').value;
             const formLngValue = document.getElementById('longitude').value;
 
-            // Define as coordenadas iniciais: usa valores do form se existirem e forem válidos, senão usa padrão.
+           
             const initialLat = (formLatValue && !isNaN(parseFloat(formLatValue))) ? parseFloat(formLatValue) : defaultLat;
             const initialLng = (formLngValue && !isNaN(parseFloat(formLngValue))) ? parseFloat(formLngValue) : defaultLng;
             const initialZoomToUse = (initialLat !== defaultLat || initialLng !== defaultLng) ? selectedZoom : defaultZoom;
@@ -254,13 +254,13 @@
                 maxZoom: 19
             }).addTo(map);
 
-            // Adiciona marcador inicial se lat/lng vierem do formulário e forem diferentes do padrão
+            
             if (initialLat !== defaultLat || initialLng !== defaultLng) {
                 marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
                 marker.on('dragend', function(event) {
                     updateCoordinates(event.target.getLatLng());
                 });
-                // Força uma atualização do campo de texto da localização se houver marcador inicial
+
                 updateAddressField(initialLat, initialLng);
                 marker.bindPopup(`Localização atual:<br>Lat: ${initialLat.toFixed(4)}, Lng: ${initialLng.toFixed(4)}`).openPopup();
             }
@@ -292,14 +292,14 @@
             updateAddressField(latlng.lat, latlng.lng);
         }
 
-        // Função para buscar endereço via Nominatim e atualizar campo de texto
+
         function updateAddressField(lat, lng) {
              fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
                 .then(response => response.json())
                 .then(data => {
                     let addressText = `Lat: ${parseFloat(lat).toFixed(4)}, Lng: ${parseFloat(lng).toFixed(4)}`; // Fallback
                     if (data && data.display_name) {
-                        // Tenta montar um endereço mais amigável
+
                         if (data.address) {
                             const ad = data.address;
                             const parts = [
@@ -307,7 +307,7 @@
                                 ad.city || ad.town || ad.village, ad.state, ad.postcode
                             ];
                             addressText = parts.filter(part => part).join(', ').replace(/, ,/g, ',').trim();
-                            if (!addressText) addressText = data.display_name; // Se não conseguiu montar, usa o display_name
+                            if (!addressText) addressText = data.display_name; 
                         } else {
                            addressText = data.display_name;
                         }
@@ -323,7 +323,7 @@
         // Event listener para a busca de endereço
         document.getElementById('address-search').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Impede o submit do formulário principal
+                event.preventDefault(); 
                 const query = this.value.trim();
                 if (!query) return;
 
@@ -335,7 +335,7 @@
                             const lat = parseFloat(result.lat);
                             const lon = parseFloat(result.lon);
 
-                            map.setView([lat, lon], selectedZoom); // Centraliza e dá zoom no resultado
+                            map.setView([lat, lon], selectedZoom); 
 
                             if (marker) {
                                 marker.setLatLng([lat, lon]);
@@ -345,7 +345,7 @@
                                     updateCoordinates(e.target.getLatLng());
                                 });
                             }
-                            updateCoordinates({ lat: lat, lng: lon }); // Atualiza campos hidden, popup e texto
+                            updateCoordinates({ lat: lat, lng: lon }); 
                         } else {
                             alert('Endereço não encontrado. Tente refinar sua busca ou clique diretamente no mapa.');
                         }
@@ -358,7 +358,6 @@
         });
 
 // --- INÍCIO DA MODIFICAÇÃO: LÓGICA DE BUSCA DE ENDEREÇO ---
-        // Função para realizar a busca do endereço
         function performAddressSearch() {
             const query = document.getElementById('address-search').value.trim();
             if (!query) {
@@ -374,7 +373,7 @@
                         const lat = parseFloat(result.lat);
                         const lon = parseFloat(result.lon);
 
-                        map.setView([lat, lon], selectedZoom); // selectedZoom é uma variável global definida antes
+                        map.setView([lat, lon], selectedZoom); 
 
                         if (marker) {
                             marker.setLatLng([lat, lon]);
@@ -384,7 +383,7 @@
                                 updateCoordinates(e.target.getLatLng());
                             });
                         }
-                        updateCoordinates({ lat: lat, lng: lon }); // Atualiza campos hidden, popup e texto
+                        updateCoordinates({ lat: lat, lng: lon });
                     } else {
                         alert('Endereço não encontrado. Tente refinar sua busca ou clique diretamente no mapa.');
                         console.warn('Nenhum resultado encontrado para o endereço:', query);
@@ -396,20 +395,18 @@
                 });
         }
 
-        // Event listener para o clique no NOVO BOTÃO de busca
         document.getElementById('search-address-button').addEventListener('click', performAddressSearch);
 
-        // Event listener para a tecla Enter no CAMPO de busca (mantém a funcionalidade)
         document.getElementById('address-search').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Impede o submit do formulário principal
-                performAddressSearch(); // Chama a mesma função de busca
+                event.preventDefault(); 
+                performAddressSearch(); 
             }
         });
         // --- FIM DA MODIFICAÇÃO: LÓGICA DE BUSCA DE ENDEREÇO ---
 
 
-        // Inicializar o mapa quando o DOM estiver pronto
+
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
         });

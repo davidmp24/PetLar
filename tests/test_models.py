@@ -1,9 +1,8 @@
-# tests/test_models.py
 import pytest
-from app import Admin, Animal, Adotante  # Importe seus modelos
+from app import Admin, Animal, Adotante
 from werkzeug.security import check_password_hash
 
-def test_admin_model(db): # Usa a fixture db
+def test_admin_model(db):
     """Testa a criação e recuperação de um Admin."""
     from werkzeug.security import generate_password_hash
     password = "securepassword"
@@ -16,11 +15,11 @@ def test_admin_model(db): # Usa a fixture db
     retrieved_admin = Admin.query.filter_by(username="testuser").first()
     assert retrieved_admin is not None
     assert retrieved_admin.username == "testuser"
-    assert check_password_hash(retrieved_admin.password, password) # Verifica o hash
+    assert check_password_hash(retrieved_admin.password, password)
 
 def test_animal_model(db):
     """Testa a criação e recuperação de um Animal."""
-    animal = Animal(nome="Buddy", especie="Cachorro", idade=3) # Adicione outros campos conforme necessário
+    animal = Animal(nome="Buddy", especie="Cachorro", idade=3)
     db.session.add(animal)
     db.session.commit()
 
@@ -28,9 +27,8 @@ def test_animal_model(db):
     assert retrieved_animal is not None
     assert retrieved_animal.especie == "Cachorro"
     assert retrieved_animal.idade == 3
-    assert retrieved_animal.adotado is False # Verifica valor padrão
+    assert retrieved_animal.adotado is False
 
-# Adicione um teste similar para o modelo Adotante
 def test_adotante_model(db):
     """Testa a criação e recuperação de um Adotante."""
     adotante = Adotante(
@@ -46,7 +44,6 @@ def test_adotante_model(db):
         animal_interesse="Buddy",
         tipo_animal_interesse="Cachorro",
         tem_outros_animais="Nao"
-        # Preencha outros campos obrigatórios
     )
     db.session.add(adotante)
     db.session.commit()

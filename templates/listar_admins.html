@@ -38,11 +38,10 @@
                                 {% if admin_user.username != admin_logado %}
                                     <form action="{{ url_for('excluir_admin', admin_id=admin_user.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir o administrador {{ admin_user.username }}? Esta ação não pode ser desfeita.');">
                                         <button type="submit" class="btn btn-sm btn-danger" title="Excluir Administrador">
-                                            <i class="fas fa-user-times"></i> {# Ícone de excluir usuário #}
+                                            <i class="fas fa-user-times"></i> 
                                         </button>
                                     </form>
                                 {% else %}
-                                    {# Desabilita o botão para o usuário logado #}
                                     <button type="button" class="btn btn-sm btn-danger disabled" title="Não é possível excluir a si mesmo">
                                         <i class="fas fa-user-times"></i>
                                     </button>

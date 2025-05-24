@@ -5,7 +5,7 @@ import uuid
 import os
 from werkzeug.utils import secure_filename
 import os
-from flask import flash # Certifique-se que flash está importado
+from flask import flash 
 from sqlalchemy import func 
 from datetime import datetime
 import logging
@@ -15,18 +15,17 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma_chave_dev_muito_segura_padrao')
 if os.environ.get('DATABASE_URL'):
-    # Para o Render, a URL já vem no formato correto para SQLAlchemy >= 1.4
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
 
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///petlar.db' # Local
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///petlar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)  # Inicialize SQLAlchemy *apenas aqui*
+db = SQLAlchemy(app)  
 
 migrate = Migrate(app, db)
 
-# Modelos definidos dentro do contexto da aplicação
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
@@ -36,56 +35,53 @@ class Animal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     especie = db.Column(db.String(100), nullable=False)
-    raca = db.Column(db.String(100), nullable=True) # Tornar null=True se não for obrigatório
-    sexo = db.Column(db.String(10), nullable=True) # "Macho" ou "Fêmea"
-    idade = db.Column(db.Integer, nullable=True) # Idade em anos/meses? Definir unidade.
+    raca = db.Column(db.String(100), nullable=True) 
+    sexo = db.Column(db.String(10), nullable=True) 
+    idade = db.Column(db.Integer, nullable=True) 
     data_cadastro = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
-    # --- Campos do Formulário Adicionados ---
     temperamento = db.Column(db.String(200), nullable=True)
-    comportamento_outros = db.Column(db.String(200), nullable=True) # Comportamento com outros animais
-    comportamento_criancas = db.Column(db.String(200), nullable=True) # Comportamento com crianças
+    comportamento_outros = db.Column(db.String(200), nullable=True) 
+    comportamento_criancas = db.Column(db.String(200), nullable=True) 
     doencas_preexistentes = db.Column(db.Text, nullable=True)
     tratamentos = db.Column(db.Text, nullable=True)
     cor = db.Column(db.String(50), nullable=True)
-    tamanho = db.Column(db.String(50), nullable=True) # 'Pequeno', 'Médio', 'Grande'
+    tamanho = db.Column(db.String(50), nullable=True) 
     localizacao = db.Column(db.String(255), nullable=True)
     descricao = db.Column(db.Text, nullable=True)
-    foto_filename = db.Column(db.String(255), nullable=True) # Nome do arquivo da foto
+    foto_filename = db.Column(db.String(255), nullable=True) 
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     localizacao = db.Column(db.String(255), nullable=True)
     adotante_id = db.Column(db.Integer, db.ForeignKey('adotante.id'), nullable=True)
     adotante = db.relationship('Adotante', backref=db.backref('animais_adotados', lazy=True))
-
-    # --- Outros Campos ---
     adotado = db.Column(db.Boolean, default=False)
-    data_cadastro = db.Column(db.DateTime, default=db.func.current_timestamp()) # Útil ter data de cadastro
+    data_cadastro = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self):
         return f'<Animal {self.id}: {self.nome} ({self.especie})>'
 
-    # (Opcional) Propriedade para obter URL da foto
+   
     @property
     def foto_url(self):
         if self.foto_filename:
-            # Retorna o URL para a foto dentro da pasta static/uploads/animais
+            
             return url_for('static', filename=f'uploads/animais/{self.foto_filename}', _external=True)
         else:
-            # Retorna URL de uma imagem placeholder se não houver foto
-            return url_for('static', filename='images/placeholder_animal.png', _external=True) # Exemplo
-
+           
+            return url_for('static', filename='images/placeholder_animal.png', _external=True) 
+        
 # --- Configuração de Upload ---
 UPLOAD_FOLDER_BASE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
-# Define especificamente a pasta para uploads de ADOTANTES
+
 UPLOAD_FOLDER_ADOTANTES = os.path.join(UPLOAD_FOLDER_BASE, 'adotantes')
-# Define a configuração que será usada pela rota
+
 app.config['UPLOAD_FOLDER_ADOTANTES'] = UPLOAD_FOLDER_ADOTANTES
-# Garante que a pasta exista
+
 os.makedirs(app.config['UPLOAD_FOLDER_ADOTANTES'], exist_ok=True)
 
-# (Manter também a configuração para animais, se necessário)
+
 UPLOAD_FOLDER_ANIMAIS = os.path.join(UPLOAD_FOLDER_BASE, 'animais')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_ANIMAIS # Ou outro nome de config
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_ANIMAIS 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 class Adotante(db.Model):
@@ -106,12 +102,12 @@ class Adotante(db.Model):
     tipos_animais = db.Column(db.String(200))
     foto_pessoal_filename = db.Column(db.String(255), nullable=True)
     foto_local_filename = db.Column(db.String(255), nullable=True)
-    tem_criancas = db.Column(db.String(3), nullable=True) # 'Sim' ou 'Nao' - Tornar nullable=True por segurança inicial
-    quantidade_criancas = db.Column(db.Integer, nullable=True) # Só aplicável se tem_criancas == 'Sim'
-    idades_criancas = db.Column(db.Text, nullable=True) # Armazenar como texto (ex: "2, 5 e 10 anos")
-    restricoes_criancas = db.Column(db.Text, nullable=True) # Alergias ou outras restrições
+    tem_criancas = db.Column(db.String(3), nullable=True) 
+    quantidade_criancas = db.Column(db.Integer, nullable=True) 
+    idades_criancas = db.Column(db.Text, nullable=True) 
+    restricoes_criancas = db.Column(db.Text, nullable=True) 
     data_cadastro = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
-    localizacao_mapa_texto = db.Column(db.Text, nullable=True) # Descrição textual vinda do mapa/geocodificação
+    localizacao_mapa_texto = db.Column(db.Text, nullable=True) 
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     
@@ -119,17 +115,17 @@ class Adotante(db.Model):
 def foto_pessoal_url(self):
     if self.foto_pessoal_filename:
         return url_for('static', filename=f'uploads/adotantes/{self.foto_pessoal_filename}', _external=True)
-    return url_for('static', filename='images/placeholder_adotante.png', _external=True) # Placeholder pessoa
+    return url_for('static', filename='images/placeholder_adotante.png', _external=True) 
 
 @property
 def foto_local_url(self):
     if self.foto_local_filename:
         return url_for('static', filename=f'uploads/adotantes/{self.foto_local_filename}', _external=True)
-    return url_for('static', filename='images/placeholder_local.png', _external=True) # Placeholder local    
+    return url_for('static', filename='images/placeholder_local.png', _external=True)   
 
 def criar_admin():
     with app.app_context():
-        # db.init_app(app)  # REMOVA ESTA LINHA
+        
         if not Admin.query.filter_by(username="admin").first():
             hashed_password = generate_password_hash("123")
             admin = Admin(username="admin", password=hashed_password)
@@ -139,7 +135,7 @@ def criar_admin():
 
 def remover_arquivo_se_existe(diretorio, nome_arquivo):
     """Função auxiliar para remover um arquivo se o nome for válido e ele existir."""
-    # Só prossegue se ambos diretório e nome_arquivo forem válidos (não None/vazios)
+   
     if diretorio and nome_arquivo:
         caminho_completo = os.path.join(diretorio, nome_arquivo)
         if os.path.exists(caminho_completo):
@@ -173,22 +169,21 @@ def login():
 
 # --- Rotas de Gerenciamento de Administradores ---
 
-# Rota para Listar Admins
 @app.route('/listar_admins')
 def listar_admins():
     if 'admin' not in session:
         return redirect(url_for('login'))
-    # Busca todos os admins, talvez ordenados por username
+   
     try:
         admins = Admin.query.order_by(Admin.username).all()
     except Exception as e:
         flash(f"Erro ao buscar administradores: {e}", "danger")
         admins = []
-    # Passa o nome do admin logado para o template, para evitar auto-exclusão/edição
+   
     admin_logado = session.get('admin')
     return render_template('listar_admins.html', admins=admins, admin_logado=admin_logado)
 
-# Rota para Registrar Novo Admin (GET e POST)
+
 @app.route('/registrar_admin', methods=['GET', 'POST'])
 def registrar_admin():
     if 'admin' not in session:
@@ -200,11 +195,11 @@ def registrar_admin():
         confirm_password = request.form.get('confirm_password')
 
         erros = []
-        # Validações
+        
         if not username:
             erros.append('Nome de usuário é obrigatório.')
         else:
-            # Verifica se username já existe
+            
             user_existente = Admin.query.filter_by(username=username).first()
             if user_existente:
                 erros.append(f'O nome de usuário "{username}" já está em uso.')
@@ -215,10 +210,9 @@ def registrar_admin():
 
         if erros:
             for erro in erros: flash(erro, 'danger')
-            # Passa o username digitado de volta para repopular
             return render_template('registrar_admin.html', username=username)
 
-        # Se passou nas validações
+        
         try:
             hashed_password = generate_password_hash(password)
             novo_admin = Admin(username=username, password=hashed_password)
@@ -232,34 +226,30 @@ def registrar_admin():
             app.logger.error(f"Erro DB Insert Admin: {e}")
             return render_template('registrar_admin.html', username=username)
 
-    # Método GET
+    
     return render_template('registrar_admin.html')
 
-# Rota para Editar Admin (GET - Mostrar formulário)
 @app.route('/editar_admin/<int:admin_id>', methods=['GET'])
 def editar_admin_form(admin_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
 
     admin_a_editar = Admin.query.get_or_404(admin_id)
-    # Passa o objeto admin para o template
+    
     return render_template('editar_admin.html', admin=admin_a_editar)
 
-# Rota para Editar Admin (POST - Processar formulário, focado em senha)
 @app.route('/editar_admin/<int:admin_id>', methods=['POST'])
 def editar_admin_submit(admin_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
 
     admin_a_editar = Admin.query.get_or_404(admin_id)
-    # Não permitir editar o próprio nome de usuário facilmente via este form
-    # Foco na atualização de senha
-
+   
     new_password = request.form.get('new_password')
     confirm_password = request.form.get('confirm_password')
 
     erros = []
-    # Só valida e atualiza se o usuário preencheu os campos de senha
+   
     if new_password or confirm_password:
         if not new_password:
             erros.append('Nova senha é obrigatória para alterar.')
@@ -268,7 +258,7 @@ def editar_admin_submit(admin_id):
 
         if not erros:
             try:
-                # Atualiza a senha hashada
+              
                 admin_a_editar.password = generate_password_hash(new_password)
                 db.session.commit()
                 flash(f'Senha do administrador "{admin_a_editar.username}" atualizada com sucesso!', 'success')
@@ -277,19 +267,18 @@ def editar_admin_submit(admin_id):
                 db.session.rollback()
                 flash(f'Erro ao atualizar a senha: {e}', 'danger')
                 app.logger.error(f"Erro DB Update Admin Password: {e}")
-                # Re-renderiza o form de edição em caso de erro no DB
+               
                 return render_template('editar_admin.html', admin=admin_a_editar)
         else:
-            # Se houver erros de validação de senha
+            
             for erro in erros: flash(erro, 'danger')
             return render_template('editar_admin.html', admin=admin_a_editar)
     else:
-        # Se nenhum campo de senha foi preenchido, apenas volta para a lista
+        
         flash('Nenhuma alteração de senha foi fornecida.', 'info')
         return redirect(url_for('listar_admins'))
 
 
-# Rota para Excluir Admin (Opcional, mas útil)
 @app.route('/excluir_admin/<int:admin_id>', methods=['POST'])
 def excluir_admin(admin_id):
     if 'admin' not in session:
@@ -298,12 +287,12 @@ def excluir_admin(admin_id):
     admin_a_excluir = Admin.query.get_or_404(admin_id)
     admin_logado = session.get('admin')
 
-    # IMPEDE AUTO-EXCLUSÃO
+ 
     if admin_a_excluir.username == admin_logado:
         flash('Você não pode excluir sua própria conta de administrador.', 'danger')
         return redirect(url_for('listar_admins'))
 
-    # (Opcional) Impedir exclusão do último admin
+   
     if Admin.query.count() <= 1:
          flash('Não é possível excluir o último administrador.', 'danger')
          return redirect(url_for('listar_admins'))
@@ -332,26 +321,22 @@ def dashboard():
         animais_adotados = db.session.query(func.count(Animal.id)).filter(Animal.adotado == True).scalar()
         total_adotantes = db.session.query(func.count(Adotante.id)).scalar()
 
-        # --- Consultas para Listas Recentes (Exemplo: Últimos 5 animais) ---
+        
         ultimos_animais = Animal.query.order_by(Animal.data_cadastro.desc()).limit(5).all()
-        # (Adicionar consulta para últimos adotantes se desejar)
-
-        # --- Consultas para Gráficos (Exemplo) ---
-        # Dados para gráfico de Status (Disponível/Adotado)
+        
         stats_status = {
             'Disponível': animais_disponiveis,
             'Adotado': animais_adotados
         }
-        # Dados para gráfico por Espécie
+        
         stats_especie = db.session.query(Animal.especie, func.count(Animal.especie)).group_by(Animal.especie).order_by(func.count(Animal.especie).desc()).all()
-        # Formatar para o gráfico (ex: [['Cachorro', 15], ['Gato', 10]])
+        
         dados_grafico_especie = [[especie, count] for especie, count in stats_especie]
 
 
     except Exception as e:
         flash(f"Erro ao carregar dados do dashboard: {e}", "danger")
         app.logger.error(f"Erro Dashboard Query: {e}")
-        # Definir valores padrão em caso de erro
         total_animais = 0
         animais_disponiveis = 0
         animais_adotados = 0
@@ -361,8 +346,8 @@ def dashboard():
         dados_grafico_especie = []
 
 
-    # Passa todos os dados para o template
-    return render_template('dashboard.html', # <- MUDAR AQUI
+   
+    return render_template('dashboard.html', 
                            page="dashboard",
                            total_animais=total_animais,
                            animais_disponiveis=animais_disponiveis,
@@ -378,23 +363,21 @@ def logout():
     session.pop('admin', None)
     return redirect(url_for('login'))
 
-# ... (configuração do UPLOAD_FOLDER como mostrado anteriormente) ...
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/cadastrar_animal', methods=['GET', 'POST'])
 def cadastrar_animal():
-    # Verifica se o administrador está logado
+  
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Define as coordenadas iniciais padrão para o mapa (caso seja GET ou erro com repopulação sem coords)
-    # Essas são usadas no template para inicializar o mapa
-    initial_map_coords = {'lat': -14.2350, 'lng': -51.9253} # Centro do Brasil (aproximado)
+   
+    initial_map_coords = {'lat': -14.2350, 'lng': -51.9253} 
 
     if request.method == 'POST':
-        # --- Ler dados do formulário ---
+      
         nome = request.form.get('nome')
         especie = request.form.get('especie')
         raca = request.form.get('raca')
@@ -408,71 +391,64 @@ def cadastrar_animal():
         tratamentos = request.form.get('tratamentos')
         cor = request.form.get('cor')
         tamanho = request.form.get('tamanho')
-        # Para o mapa e localização textual
-        localizacao_texto = request.form.get('localizacao') # Campo de texto para endereço/descrição
+        localizacao_texto = request.form.get('localizacao') 
         latitude_str = request.form.get('latitude')
         longitude_str = request.form.get('longitude')
-        # Foto
+
         foto = request.files.get('foto')
 
-        # Inicializa a lista de erros
         erros = []
 
         # --- Validações de Campos Obrigatórios e Formato ---
         if not nome: erros.append('O nome do animal é obrigatório.')
         if not especie: erros.append('A espécie do animal é obrigatória.')
         if not sexo: erros.append('O sexo do animal é obrigatório.')
-        # Adicione mais validações para outros campos se forem obrigatórios
-        # Ex: if not tamanho: erros.append('O tamanho do animal é obrigatório.')
 
         # --- Conversão e Validação de Idade ---
-        idade = None # Inicializa como None
-        if idade_str: # Só tenta converter se algo foi digitado
+        idade = None
+        if idade_str:
             try:
                 idade = int(idade_str)
                 if idade < 0:
                     erros.append('A idade não pode ser negativa.')
-                    idade = None # Reseta se inválido
+                    idade = None
             except ValueError:
                 erros.append('A idade deve ser um número inteiro válido.')
-                idade = None # Reseta se inválido
+                idade = None
 
         # --- Conversão e Validação de Coordenadas Geográficas ---
-        latitude = None # Inicializa como None
-        longitude = None # Inicializa como None
-        if latitude_str and longitude_str: # Ambas devem ser fornecidas se uma for
+        latitude = None
+        longitude = None
+        if latitude_str and longitude_str:
             try:
                 latitude = float(latitude_str)
                 longitude = float(longitude_str)
                 if not (-90 <= latitude <= 90):
                     erros.append('Latitude inválida (deve estar entre -90 e 90 graus).')
-                    latitude = None # Reseta
+                    latitude = None
                 if not (-180 <= longitude <= 180):
                     erros.append('Longitude inválida (deve estar entre -180 e 180 graus).')
-                    longitude = None # Reseta
-            except (ValueError, TypeError): # TypeError para caso de None não ser pego antes
+                    longitude = None
+            except (ValueError, TypeError):
                 erros.append('Latitude e Longitude devem ser números válidos.')
-                latitude, longitude = None, None # Reseta ambos
-        elif latitude_str or longitude_str: # Se apenas uma foi fornecida
+                latitude, longitude = None, None
+        elif latitude_str or longitude_str:
             erros.append('Latitude e Longitude devem ser fornecidas juntas, ou ambas deixadas em branco, se o marcador não for usado.')
-            # Não reseta aqui, pois o usuário pode ter preenchido uma e esquecido a outra
 
-        # Validação para o campo de texto da localização (opcional, mas se as coordenadas forem obrigatórias, este também pode ser)
         if not localizacao_texto and (latitude is None or longitude is None):
             erros.append('Forneça uma localização (clicando no mapa ou digitando o endereço textual).')
 
 
         # --- Tratamento da Foto ---
-        foto_filename_salvar = None # Inicializa como None
-        if foto and foto.filename != '': # Verifica se um arquivo foi realmente selecionado
+        foto_filename_salvar = None
+        if foto and foto.filename != '':
             if allowed_file(foto.filename):
                 nome_seguro = secure_filename(f"{uuid.uuid4()}_{foto.filename}")
-                caminho_foto = os.path.join(app.config['UPLOAD_FOLDER'], nome_seguro) # UPLOAD_FOLDER para animais
+                caminho_foto = os.path.join(app.config['UPLOAD_FOLDER'], nome_seguro)
                 try:
-                    # Garante que a pasta de upload para animais exista
                     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
                     foto.save(caminho_foto)
-                    foto_filename_salvar = nome_seguro # Guarda nome se salvou
+                    foto_filename_salvar = nome_seguro
                 except Exception as e:
                     erros.append(f'Erro ao salvar a foto do animal: {str(e)}')
                     app.logger.error(f'Erro ao salvar foto do animal: {str(e)}')
@@ -482,15 +458,12 @@ def cadastrar_animal():
 
         # --- Se houver erros de validação ou upload, re-renderizar o formulário ---
         if erros:
-            # Tenta remover o arquivo de foto que pode ter sido salvo no disco ANTES de detectar o erro
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER'], foto_filename_salvar)
 
             for erro_msg in erros:
                  flash(erro_msg, 'danger')
 
             app.logger.warning(f'Erros no formulário de cadastro de animal: {erros}')
-            # Repassa os dados do formulário para repopular os campos
-            # E as coordenadas iniciais (que podem ter vindo do form_data)
             current_lat = request.form.get('latitude', initial_map_coords['lat'])
             current_lng = request.form.get('longitude', initial_map_coords['lng'])
             map_coords_repopulate = {'lat': current_lat, 'lng': current_lng}
@@ -505,7 +478,7 @@ def cadastrar_animal():
             especie=especie,
             raca=raca,
             sexo=sexo,
-            idade=idade, # Usa o valor convertido (ou None)
+            idade=idade,
             temperamento=temperamento,
             comportamento_outros=comportamento_outros,
             comportamento_criancas=comportamento_criancas,
@@ -513,13 +486,11 @@ def cadastrar_animal():
             tratamentos=tratamentos,
             cor=cor,
             tamanho=tamanho,
-            localizacao=localizacao_texto, # Salva o texto descritivo da localização
+            localizacao=localizacao_texto,
             descricao=descricao,
-            foto_filename=foto_filename_salvar, # Nome do arquivo salvo (ou None)
-            latitude=latitude,   # Latitude convertida (ou None)
-            longitude=longitude, # Longitude convertida (ou None)
-            # 'adotado' e 'adotante_id' terão valores padrão ou serão None
-            # 'data_cadastro' será definido pelo server_default no banco
+            foto_filename=foto_filename_salvar,
+            latitude=latitude,
+            longitude=longitude,
         )
 
         try:
@@ -527,17 +498,15 @@ def cadastrar_animal():
             db.session.commit()
             flash(f'Animal "{novo_animal.nome}" cadastrado com sucesso!', 'success')
             app.logger.info(f'Animal cadastrado: {novo_animal.nome}, ID: {novo_animal.id}')
-            return redirect(url_for('listar_animais')) # Ou para o dashboard
+            return redirect(url_for('listar_animais'))
 
         except Exception as e:
-            db.session.rollback() # Desfaz quaisquer mudanças pendentes na sessão do DB
+            db.session.rollback()
             flash(f'Erro interno ao salvar o animal no banco de dados: {str(e)}', 'danger')
             app.logger.error(f'Erro ao salvar animal no banco de dados: {str(e)}')
 
-            # Tenta remover o arquivo de foto que foi salvo no disco se o commit do DB falhar
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER'], foto_filename_salvar)
 
-            # Repassa os dados do formulário para repopular os campos
             current_lat = request.form.get('latitude', initial_map_coords['lat'])
             current_lng = request.form.get('longitude', initial_map_coords['lng'])
             map_coords_repopulate = {'lat': current_lat, 'lng': current_lng}
@@ -547,7 +516,6 @@ def cadastrar_animal():
                                    initial_map_coords=map_coords_repopulate)
 
     # --- Requisição GET ---
-    # Renderiza o formulário vazio, passando as coordenadas iniciais padrão para o mapa
     return render_template('cadastrar_animal.html',
                            form_data=None,
                            initial_map_coords=initial_map_coords)
@@ -559,42 +527,32 @@ def listar_animais():
 
     query = Animal.query
 
-    # Ler parâmetros de filtro da URL
     filtro_nome = request.args.get('filtro_nome', '').strip()
     filtro_especie = request.args.get('filtro_especie', '').strip()
     filtro_data_inicio_str = request.args.get('filtro_data_inicio', '').strip()
     filtro_data_fim_str = request.args.get('filtro_data_fim', '').strip()
 
-    # Aplicar filtros à query
     if filtro_nome:
         query = query.filter(Animal.nome.ilike(f'%{filtro_nome}%'))
     if filtro_especie:
         query = query.filter(Animal.especie.ilike(f'%{filtro_especie}%'))
 
-    # Aplicar filtro de data de início
     if filtro_data_inicio_str:
         try:
-            # Converte a string de data para objeto datetime
             data_inicio = datetime.strptime(filtro_data_inicio_str, '%Y-%m-%d').date()
-            # Filtra registros onde data_cadastro é maior ou igual à data_inicio
-            # Precisamos usar func.date() se a coluna for DateTime e quisermos comparar só a data
             query = query.filter(db.func.date(Animal.data_cadastro) >= data_inicio)
         except ValueError:
             flash("Formato de Data de Início inválido. Use AAAA-MM-DD.", "warning")
-            # Pode optar por não aplicar o filtro ou retornar erro
 
-    # Aplicar filtro de data de fim
     if filtro_data_fim_str:
         try:
             data_fim = datetime.strptime(filtro_data_fim_str, '%Y-%m-%d').date()
-            # Filtra registros onde data_cadastro é menor ou igual à data_fim
             query = query.filter(db.func.date(Animal.data_cadastro) <= data_fim)
         except ValueError:
             flash("Formato de Data de Fim inválido. Use AAAA-MM-DD.", "warning")
 
-    # Ordena e executa a query
     try:
-        animais = query.order_by(Animal.data_cadastro.desc(), Animal.nome).all() # Ordena por data (mais novo primeiro) e nome
+        animais = query.order_by(Animal.data_cadastro.desc(), Animal.nome).all()
     except Exception as e:
         flash(f"Erro ao buscar animais: {e}", "danger")
         app.logger.error(f"Erro Listar Animais Query: {e}")
@@ -607,8 +565,7 @@ def listar_animais():
 def detalhes_animal(animal_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
-    animal = Animal.query.get_or_404(animal_id) # Pega o animal ou retorna 404 se não existir
-    # Você precisará criar o template 'detalhes_animal.html'
+    animal = Animal.query.get_or_404(animal_id)
     return render_template('detalhes_animal.html', animal=animal)
 
 # --- Rota para Editar (GET - Mostrar formulário preenchido) ---
@@ -617,8 +574,6 @@ def editar_animal_form(animal_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
     animal = Animal.query.get_or_404(animal_id)
-    # Você precisará criar/adaptar o template 'editar_animal.html'
-    # Ele será muito parecido com 'cadastrar_animal.html', mas preenchido
     return render_template('editar_animal.html', animal=animal)
 
 # --- Rota para Editar (POST - Processar formulário) ---
@@ -649,34 +604,31 @@ def editar_animal_submit(animal_id):
     erros = []
     if not nome: erros.append('O nome do animal é obrigatório.')
     if not especie: erros.append('A espécie do animal é obrigatória.')
-    idade = animal.idade # Mantem a idade antiga se não for alterada
+    idade = animal.idade
     if idade_str:
         try:
             idade = int(idade_str)
             if idade < 0: erros.append('A idade não pode ser negativa.')
         except ValueError: erros.append('A idade deve ser um número.')
-    # Adicione mais validações
 
     # --- Tratamento da Foto (Substituição) ---
-    foto_filename = animal.foto_filename # Mantem foto antiga por padrão
+    foto_filename = animal.foto_filename
     if foto and foto.filename != '':
         if allowed_file(foto.filename):
-            # Apaga a foto antiga ANTES de salvar a nova (se existir)
             if animal.foto_filename:
                 old_photo_path = os.path.join(app.config['UPLOAD_FOLDER'], animal.foto_filename)
                 if os.path.exists(old_photo_path):
                     try:
                         os.remove(old_photo_path)
                     except OSError as e:
-                        app.logger.error(f"Erro ao remover foto antiga {animal.foto_filename}: {e}") # Logar erro
-            # Salva a nova foto
+                        app.logger.error(f"Erro ao remover foto antiga {animal.foto_filename}: {e}")
             foto_filename = secure_filename(f"{uuid.uuid4()}_{foto.filename}")
             foto_path = os.path.join(app.config['UPLOAD_FOLDER'], foto_filename)
             try:
                 foto.save(foto_path)
             except Exception as e:
                 erros.append(f"Erro ao salvar a nova foto: {e}")
-                foto_filename = animal.foto_filename # Reverte para a antiga se erro
+                foto_filename = animal.foto_filename
         else:
             erros.append('Tipo de arquivo de foto não permitido.')
 
@@ -684,7 +636,6 @@ def editar_animal_submit(animal_id):
     if erros:
         for erro in erros:
             flash(erro, 'danger')
-        # Re-renderiza o formulário de edição passando o objeto animal (com dados não salvos)
         return render_template('editar_animal.html', animal=animal)
 
     # --- Atualizar os dados do objeto animal ---
@@ -702,16 +653,15 @@ def editar_animal_submit(animal_id):
     animal.tamanho = tamanho
     animal.localizacao = localizacao
     animal.descricao = descricao
-    animal.foto_filename = foto_filename # Atualiza o nome do arquivo da foto
+    animal.foto_filename = foto_filename
 
     try:
-        db.session.commit() # Salva as alterações
+        db.session.commit()
         flash(f'Animal "{animal.nome}" atualizado com sucesso!', 'success')
         return redirect(url_for('listar_animais'))
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao atualizar o animal: {e}', 'danger')
-        # app.logger.error(f"Erro DB Update: {e}")
         return render_template('editar_animal.html', animal=animal)
 
 
@@ -722,20 +672,18 @@ def excluir_animal(animal_id):
         return redirect(url_for('login'))
     animal = Animal.query.get_or_404(animal_id)
 
-    foto_filename_to_delete = animal.foto_filename # Guarda o nome antes de deletar o objeto
+    foto_filename_to_delete = animal.foto_filename
 
     try:
         db.session.delete(animal)
         db.session.commit()
 
-        # Tenta remover o arquivo da foto associada APÓS o commit bem sucedido
         if foto_filename_to_delete:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], foto_filename_to_delete)
             if os.path.exists(file_path):
                 try:
                     os.remove(file_path)
                 except OSError as e:
-                    # Logar o erro, mas não impedir o fluxo principal
                     app.logger.error(f"Erro ao remover arquivo de foto {foto_filename_to_delete}: {e}")
                     flash(f'Animal excluído, mas houve um erro ao remover o arquivo de foto associado.', 'warning')
 
@@ -743,7 +691,6 @@ def excluir_animal(animal_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao excluir o animal: {e}', 'danger')
-        # app.logger.error(f"Erro DB Delete: {e}")
 
     return redirect(url_for('listar_animais'))
 
@@ -756,18 +703,16 @@ def marcar_adotado(animal_id):
     animal = Animal.query.get_or_404(animal_id)
 
     try:
-        animal.adotado = True # Marca como adotado
+        animal.adotado = True
         db.session.commit()
         flash(f'Animal "{animal.nome}" marcado como adotado!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao marcar o animal como adotado: {e}', 'danger')
-        # app.logger.error(f"Erro DB Mark Adopted: {e}")
 
     return redirect(url_for('listar_animais'))
 
 # --- Rota para Marcar como Disponível ---
-# Em app.py
 
 @app.route('/marcar_disponivel/<int:animal_id>', methods=['POST'])
 def marcar_disponivel(animal_id):
@@ -781,9 +726,8 @@ def marcar_disponivel(animal_id):
         return redirect(url_for('listar_animais'))
 
     try:
-        animal.adotado = False # Define status como NÃO adotado
-        animal.adotante_id = None # REMOVE o vínculo com o adotante!
-        # Se tiver data da adoção, limpar também: animal.data_adocao = None
+        animal.adotado = False
+        animal.adotante_id = None
         db.session.commit()
         flash(f'Animal "{animal.nome}" marcado como disponível novamente!', 'success')
     except Exception as e:
@@ -795,48 +739,29 @@ def marcar_disponivel(animal_id):
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
 import os
-import uuid # Necessário para nomes de arquivo únicos
-from werkzeug.utils import secure_filename # Necessário para nomes de arquivo seguros
+import uuid
+from werkzeug.utils import secure_filename
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash
 )
-# Certifique-se de que seus modelos (Adotante, Animal) e o objeto db estão importados
-# from .models import db, Adotante, Animal # Exemplo se estiver usando blueprints/models.py
-# Ou se estiver tudo em app.py:
-# from app import db, Adotante, Animal
 
-# Certifique-se de que as configurações e funções auxiliares estão definidas:
-# app.config['UPLOAD_FOLDER_ADOTANTES'] = ...
-# def allowed_file(filename): ...
-# def remover_arquivo_se_existe(diretorio, nome_arquivo): ... # Lembre-se que atualizamos esta função
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
 import os
-import uuid # Necessário para nomes de arquivo únicos
-from werkzeug.utils import secure_filename # Necessário para nomes de arquivo seguros
+import uuid
+from werkzeug.utils import secure_filename
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash
 )
-# Certifique-se de que seus modelos (Adotante, Animal - se usado para algo) e o objeto db estão importados
-# Exemplo: from app import db, Adotante, Animal (substitua 'app' pelo nome real do seu arquivo)
-# from datetime import datetime # Se precisar de conversões de data manuais
 
-# Certifique-se de que as configurações e funções auxiliares estão definidas:
-# app.config['UPLOAD_FOLDER_ADOTANTES'] = os.path.join('static', 'uploads', 'adotantes')
-# os.makedirs(app.config['UPLOAD_FOLDER_ADOTANTES'], exist_ok=True)
-# ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-# def allowed_file(filename): ...
-# def remover_arquivo_se_existe(diretorio, nome_arquivo): ...
 
 # --- Rota para Cadastrar Adotante (GET e POST) ---
 @app.route('/cadastrar_adotante', methods=['GET', 'POST'])
 def cadastrar_adotante():
-    # Verifica se o administrador está logado
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Coordenadas iniciais padrão para o mapa (para requisição GET)
-    initial_map_coords_adotante = {'lat': -14.2350, 'lng': -51.9253} # Centro do Brasil
+    initial_map_coords_adotante = {'lat': -14.2350, 'lng': -51.9253}
 
     if request.method == 'POST':
         # --- Ler dados do formulário ---
@@ -849,9 +774,6 @@ def cadastrar_adotante():
         cep = request.form.get('cep')
         telefone = request.form.get('telefone')
         email = request.form.get('email')
-        # Os campos abaixo foram removidos do modelo Adotante, mas ainda lidos do form.
-        # Se não existem mais no form, remova a leitura.
-        # Se existem no form mas não no modelo, não serão salvos no Adotante().
         animal_interesse_form = request.form.get('animal_interesse')
         tipo_animal_interesse_form = request.form.get('tipo_animal_interesse')
         justificativa_adocao = request.form.get('justificativa_adocao')
@@ -869,7 +791,6 @@ def cadastrar_adotante():
         idades_criancas = request.form.get('idades_criancas')
         restricoes_criancas = request.form.get('restricoes_criancas')
 
-        # Inicializa a lista de erros e nomes de arquivos de foto
         erros = []
         foto_pessoal_filename_salvar = None
         foto_local_filename_salvar = None
@@ -895,12 +816,6 @@ def cadastrar_adotante():
         if not cep: erros.append("CEP é obrigatório.")
         if not telefone: erros.append("Telefone é obrigatório.")
         if not email: erros.append("Email é obrigatório.")
-        # Como animal_interesse e tipo_animal_interesse foram removidos do modelo,
-        # a validação de obrigatoriedade deles também deve ser removida ou ajustada
-        # Se eles ainda são obrigatórios no formulário por algum motivo, a validação pode ficar,
-        # mas eles não serão salvos no objeto Adotante.
-        # if not animal_interesse_form: erros.append("Nome do animal de interesse é obrigatório.")
-        # if not tipo_animal_interesse_form: erros.append("Tipo de animal de interesse é obrigatório.")
         if not justificativa_adocao: erros.append("Justificativa da adoção é obrigatória.")
         if not tem_outros_animais: erros.append("Informe se possui outros animais na residência.")
         if not tem_criancas: erros.append("Informe se há crianças na residência.")
@@ -967,11 +882,11 @@ def cadastrar_adotante():
                 if tempo_sozinho < 0:
                      erros.append('Tempo sozinho (horas) não pode ser negativo.')
             except ValueError:
-                if "Tempo sozinho deve ser um número de horas." not in erros and "Tempo sozinho deve ser um número válido." not in erros : # Evita duplicar msg
+                if "Tempo sozinho deve ser um número de horas." not in erros and "Tempo sozinho deve ser um número válido." not in erros :
                     erros.append('Tempo sozinho (horas) deve ser um número válido.')
 
         quantidade_animais_convertida = None
-        tipos_animais_para_salvar = tipos_animais # Usa valor do form, será None se 'Nao' e campo estiver vazio
+        tipos_animais_para_salvar = tipos_animais
         if tem_outros_animais == 'Sim':
              if not quantidade_animais_str:
                  erros.append('Informe a quantidade de outros animais que possui.')
@@ -1017,7 +932,6 @@ def cadastrar_adotante():
             for erro_msg in erros:
                  flash(erro_msg, 'danger')
 
-            # Recalcula as coordenadas para repopular o mapa corretamente
             current_lat_adotante = request.form.get('latitude', initial_map_coords_adotante['lat'])
             current_lng_adotante = request.form.get('longitude', initial_map_coords_adotante['lng'])
             try:
@@ -1043,7 +957,6 @@ def cadastrar_adotante():
             cep=cep,
             telefone=telefone,
             email=email,
-            # animal_interesse e tipo_animal_interesse foram removidos do modelo
             justificativa_adocao=justificativa_adocao,
             tem_outros_animais=tem_outros_animais,
             tempo_sozinho=tempo_sozinho,
@@ -1099,12 +1012,11 @@ def cadastrar_adotante():
                            form_data=None,
                            initial_map_coords_adotante=initial_map_coords_adotante)
 
-@app.route('/listar_adotantes', methods=['GET']) # Adicionar GET explicitamente
+@app.route('/listar_adotantes', methods=['GET'])
 def listar_adotantes():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Inicia a query base para Adotante
     query = Adotante.query
 
     # --- LER PARÂMETROS DE FILTRO DA URL ---
@@ -1117,11 +1029,8 @@ def listar_adotantes():
     if filtro_nome_adotante:
         query = query.filter(Adotante.nome_completo.ilike(f'%{filtro_nome_adotante}%'))
     if filtro_cpf_adotante:
-        # Para CPF, uma busca exata ou 'startswith' pode ser melhor que 'contains'
-        query = query.filter(Adotante.cpf.like(f'{filtro_cpf_adotante}%')) # Começa com...
-        # Ou exato: query = query.filter(Adotante.cpf == filtro_cpf_adotante)
+        query = query.filter(Adotante.cpf.like(f'{filtro_cpf_adotante}%'))
 
-    # Aplicar filtro de data de início
     if filtro_data_inicio_adotante_str:
         try:
             data_inicio = datetime.strptime(filtro_data_inicio_adotante_str, '%Y-%m-%d').date()
@@ -1129,7 +1038,6 @@ def listar_adotantes():
         except ValueError:
             flash("Formato de Data de Início (Adotante) inválido. Use AAAA-MM-DD.", "warning")
 
-    # Aplicar filtro de data de fim
     if filtro_data_fim_adotante_str:
         try:
             data_fim = datetime.strptime(filtro_data_fim_adotante_str, '%Y-%m-%d').date()
@@ -1137,7 +1045,6 @@ def listar_adotantes():
         except ValueError:
             flash("Formato de Data de Fim (Adotante) inválido. Use AAAA-MM-DD.", "warning")
 
-    # Ordena e executa a query
     try:
         adotantes = query.order_by(Adotante.data_cadastro.desc(), Adotante.nome_completo).all()
     except Exception as e:
@@ -1164,21 +1071,15 @@ def editar_adotante_form(adotante_id):
     
     try:
         animais_disponiveis = Animal.query.filter_by(adotado=False).order_by(Animal.nome).all()
-        # Opcional: Se o animal de interesse atual do adotante JÁ FOI ADOTADO por outra pessoa,
-        # você pode querer buscá-lo separadamente para ainda mostrá-lo como selecionado,
-        # talvez com um aviso. Ou simplesmente mostrar apenas os disponíveis.
-        # Para simplicidade, vamos mostrar apenas os disponíveis. O usuário terá que re-selecionar
-        # se o animal original não estiver mais disponível.
     except Exception as e:
         flash(f"Erro ao buscar animais disponíveis: {e}", "warning")
         app.logger.error(f"Erro ao buscar animais disponíveis: {e}")
         animais_disponiveis = []
 
-    # Passa o adotante e a lista de animais para o template
     return render_template('editar_adotante.html',
                            adotante=adotante,
                            animais_disponiveis=animais_disponiveis,
-                           form_data=None) # form_data não é necessário aqui, usamos o objeto adotante
+                           form_data=None)
 
 # --- Rota para Editar Adotante (POST - Processar formulário) ---
 @app.route('/editar_adotante/<int:adotante_id>', methods=['POST'])
@@ -1192,13 +1093,10 @@ def editar_adotante_submit(adotante_id):
     nome_completo = request.form.get('nome_completo')
     rg = request.form.get('rg')
     cpf = request.form.get('cpf')
-    # ... (ler todos os outros campos de texto/select: endereco, bairro, etc.) ...
-    # Crianças
     tem_criancas = request.form.get('tem_criancas')
     quantidade_criancas_str = request.form.get('quantidade_criancas')
     idades_criancas = request.form.get('idades_criancas')
     restricoes_criancas = request.form.get('restricoes_criancas')
-    # Fotos
     foto_pessoal_nova = request.files.get('foto_pessoal')
     foto_local_nova = request.files.get('foto_local')
     localizacao_mapa_texto = request.form.get('localizacao_mapa_texto')
@@ -1209,20 +1107,17 @@ def editar_adotante_submit(adotante_id):
     # --- Validações ---
     if not nome_completo: erros.append("Nome completo é obrigatório.")
     if not rg: erros.append("RG é obrigatório.")
-    # Validar CPF (Obrigatório e Único, mas permitir o CPF atual do próprio adotante)
     if not cpf:
         erros.append("CPF é obrigatório.")
     else:
-        # Verifica se o CPF pertence a OUTRO adotante
         cpf_existente = Adotante.query.filter(Adotante.cpf == cpf, Adotante.id != adotante_id).first()
         if cpf_existente:
             erros.append(f'O CPF "{cpf}" já está cadastrado para outro adotante ({cpf_existente.nome_completo}).')
-    # ... (Adicione TODAS as outras validações obrigatórias) ...
 
 
-    latitude = adotante.latitude # Mantém valor antigo por padrão
-    longitude = adotante.longitude # Mantém valor antigo por padrão
-    if latitude_str and longitude_str: # Se novos valores foram enviados
+    latitude = adotante.latitude
+    longitude = adotante.longitude
+    if latitude_str and longitude_str:
             try:
                 latitude = float(latitude_str)
                 longitude = float(longitude_str)
@@ -1230,10 +1125,9 @@ def editar_adotante_submit(adotante_id):
                 if not (-180 <= longitude <= 180): erros.append('Longitude da residência inválida.'); longitude = adotante.longitude
             except (ValueError, TypeError):
                 erros.append('Latitude e Longitude da residência devem ser números válidos.');
-                latitude, longitude = adotante.latitude, adotante.longitude # Reverte para os antigos
-    elif latitude_str or longitude_str: # Se apenas um foi alterado, pode ser erro
+                latitude, longitude = adotante.latitude, adotante.longitude
+    elif latitude_str or longitude_str:
             erros.append('Latitude e Longitude da residência devem ser alteradas juntas ou ambas mantidas.')
-            # Reverte para os valores originais do adotante
             latitude, longitude = adotante.latitude, adotante.longitude
 
     # --- Processar Foto Pessoal (Substituição) ---
@@ -1271,8 +1165,6 @@ def editar_adotante_submit(adotante_id):
             erros.append('Tipo de arquivo não permitido para foto do local.')
 
     # --- Conversão e Validação de Tipos (Crianças e Outros) ---
-    # ... (lógica de conversão para tempo_sozinho, quantidade_animais, quantidade_criancas) ...
-    # ... (validações relacionadas a 'Sim'/'Nao' para outros_animais e criancas) ...
     quantidade_criancas = None
     if tem_criancas == 'Sim':
         if not quantidade_criancas_str: erros.append("Informe a quantidade de crianças.")
@@ -1289,7 +1181,6 @@ def editar_adotante_submit(adotante_id):
 
     # --- Se houver erros, re-renderizar o formulário de edição ---
     if erros:
-        # Não remove as fotos novas aqui, pois o usuário pode tentar corrigir
         for erro in erros: flash(erro, 'danger')
         current_lat_adotante = request.form.get('latitude', adotante.latitude if adotante.latitude is not none else -14.2350)
         current_lng_adotante = request.form.get('longitude', adotante.longitude if adotante.longitude is not none else -51.9253)
@@ -1298,22 +1189,19 @@ def editar_adotante_submit(adotante_id):
                 'lng': float(current_lng_adotante) if current_lng_adotante else -51.9253
             }
         return render_template('editar_adotante.html',
-                                   adotante=adotante, # Passa o objeto original
-                                   form_data=request.form, # Passa dados do form para repopular se necessário
+                                   adotante=adotante,
+                                   form_data=request.form,
                                    initial_map_coords_adotante=map_coords_repopulate_adotante)
 
     # --- Se não houver erros, atualizar os dados do objeto adotante ---
-    # Tenta remover as fotos antigas ANTES de atualizar os nomes no objeto
     if nova_foto_pessoal_salva:
         remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], adotante.foto_pessoal_filename)
     if nova_foto_local_salva:
          remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], adotante.foto_local_filename)
 
-    # Atualiza os atributos do objeto
     adotante.nome_completo = nome_completo
     adotante.rg = rg
     adotante.cpf = cpf
-    # ... (atualizar TODOS os outros campos lidos do formulário) ...
     adotante.tem_criancas = tem_criancas
     adotante.idades_criancas = idades_criancas
     adotante.restricoes_criancas = restricoes_criancas
@@ -1323,12 +1211,11 @@ def editar_adotante_submit(adotante_id):
     adotante.latitude = latitude
     adotante.longitude = longitude
 
-    # Lógica para campos condicionais (outros animais e crianças)
     adotante.tem_criancas = tem_criancas
     if tem_criancas == 'Sim':
-        adotante.quantidade_criancas = quantidade_criancas # Usa o valor convertido/tratado
+        adotante.quantidade_criancas = quantidade_criancas
         adotante.idades_criancas = idades_criancas
-        adotante.restricoes_criancas = restricoes_criancas # Pode ser None se não preenchido
+        adotante.restricoes_criancas = restricoes_criancas
     else:
         adotante.quantidade_criancas = None
         adotante.idades_criancas = None
@@ -1343,12 +1230,10 @@ def editar_adotante_submit(adotante_id):
         db.session.rollback()
         flash(f'Erro ao atualizar dados do adotante no banco de dados: {e}', 'danger')
         app.logger.error(f"Erro DB Update Adotante {adotante.id}: {e}")
-        # Tenta remover as *novas* fotos que podem ter sido salvas se o commit falhar
         if nova_foto_pessoal_salva:
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_filename_atualizar)
         if nova_foto_local_salva:
             remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_filename_atualizar)
-        # Re-renderiza com o objeto *antes* do rollback ter desfeito as mudanças na sessão
         return render_template('editar_adotante.html', adotante=adotante, form_data=None)
 
 
@@ -1366,7 +1251,6 @@ def excluir_adotante(adotante_id):
     try:
         db.session.delete(adotante)
         db.session.commit()
-        # Tenta remover os arquivos associados APÓS o commit
         removido_pessoal = remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_pessoal_del)
         removido_local = remover_arquivo_se_existe(app.config['UPLOAD_FOLDER_ADOTANTES'], foto_local_del)
         msg = f'Adotante "{nome_adotante}" excluído com sucesso!'
@@ -1388,12 +1272,10 @@ def registrar_adocao_form(animal_id):
         return redirect(url_for('login'))
 
     animal = Animal.query.get_or_404(animal_id)
-    # Verifica se o animal já está adotado, não deveria chegar aqui se estiver
     if animal.adotado:
         flash(f'O animal "{animal.nome}" já está marcado como adotado.', 'warning')
         return redirect(url_for('listar_animais'))
 
-    # Busca todos os adotantes para popular o dropdown
     try:
         adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
     except Exception as e:
@@ -1408,13 +1290,10 @@ def registrar_adocao_submit(animal_id):
         return redirect(url_for('login'))
 
     animal = Animal.query.get_or_404(animal_id)
-    # Pega o ID do adotante selecionado no formulário
     adotante_id_selecionado = request.form.get('adotante_selecionado_id')
 
-    # Validação básica
     if not adotante_id_selecionado:
         flash('Você precisa selecionar um adotante.', 'danger')
-        # É preciso buscar os adotantes novamente para re-renderizar o form
         adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
         return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
 
@@ -1424,18 +1303,14 @@ def registrar_adocao_submit(animal_id):
         adotantes_disponiveis = Adotante.query.order_by(Adotante.nome_completo).all()
         return render_template('registrar_adocao.html', animal=animal, adotantes=adotantes_disponiveis)
 
-    # Verifica se o animal já está adotado (dupla checagem)
     if animal.adotado:
         flash(f'O animal "{animal.nome}" já foi adotado (possivelmente por outra pessoa enquanto você preenchia).', 'warning')
         return redirect(url_for('listar_animais'))
 
     try:
         # --- ATUALIZA O ANIMAL ---
-        animal.adotado = True             # Marca como adotado
-        animal.adotante_id = adotante_id_selecionado # Vincula o ID do adotante!
-        # Se adicionou data da adoção no form, salve aqui:
-        # data_adocao_str = request.form.get('data_adocao')
-        # if data_adocao_str: animal.data_adocao = datetime.strptime(data_adocao_str, '%Y-%m-%d').date()
+        animal.adotado = True
+        animal.adotante_id = adotante_id_selecionado
 
         db.session.commit()
         flash(f'Adoção do animal "{animal.nome}" por "{adotante_selecionado.nome_completo}" registrada com sucesso!', 'success')
@@ -1454,7 +1329,6 @@ def teste_mapa():
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.init_app(app)  # REMOVA ESTA LINHA
-        db.create_all()  # Crie as tabelas *dentro* do contexto da aplicação
-        criar_admin()  # Garante que o admin existe no banco
+        db.create_all()
+        criar_admin()
     app.run(debug=True)
