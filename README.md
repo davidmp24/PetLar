@@ -238,3 +238,37 @@ O sistema PetLar fornece uma API RESTful para permitir a consulta de dados de an
           "erro": "Acesso não autorizado"
         }
         ```
+
+### 📶 Funcionalidade IoT (Simulada) - Monitoramento de Suprimentos ###
+
+Para atender ao requisito de IoT do Projeto Integrador, o PetLar implementa um sistema simulado de monitoramento de pontos de alimentação (comedouros e bebedouros) para os animais.
+
+**Como Funciona (Simulação):**
+
+Em vez de utilizar sensores físicos, o sistema permite que administradores e voluntários:
+
+1.  **Cadastrem "Pontos de Alimentação":** Cada ponto (ex: "Comedouro Canil A", "Bebedouro Gato Felix") é registrado no sistema, especificando o tipo de suprimento (ração ou água) e, opcionalmente, o animal específico ao qual está associado ou um local geral.
+2.  **Registrem Níveis Manualmente:** Através de uma interface web, os usuários podem:
+    *   Atualizar o nível estimado do suprimento em um ponto de alimentação (em percentual, de 0 a 100%).
+    *   Marcar um ponto como "Reabastecido", o que automaticamente define o nível para 100%.
+    *   Adicionar observações a cada registro.
+3.  **Visualizem o Status e Histórico:**
+    *   Uma tela de listagem mostra todos os pontos de alimentação, seus níveis atuais (com indicadores visuais, como barras de progresso coloridas) e a data da última verificação/reabastecimento.
+    *   Alertas são exibidos para pontos com níveis baixos (ex: abaixo de 25%).
+    *   É possível visualizar o histórico de registros de nível para cada ponto, permitindo um acompanhamento ao longo do tempo.
+
+**Objetivo da Simulação:**
+
+Esta funcionalidade demonstra os conceitos chave de um sistema IoT:
+
+*   **Coleta de Dados:** Embora manual, simula a coleta de dados sobre o estado de "coisas" (nível de suprimentos).
+*   **Armazenamento e Processamento:** Os dados são armazenados no banco de dados e processados para gerar alertas.
+*   **Visualização e Ação:** Os dados são apresentados de forma útil para que os responsáveis possam tomar ações (reabastecer).
+
+Em uma implementação completa com hardware, sensores de peso (para ração) ou nível (para água) enviariam esses dados automaticamente para a API do sistema. A interface de registro manual serve como um substituto para esses sensores no contexto deste projeto.
+
+**Principais Componentes:**
+
+*   **Modelos de Dados:** `PontoAlimentacao`, `RegistroNivelSuprimento`.
+*   **Rotas:** Para cadastrar pontos, registrar níveis e visualizar o status/histórico.
+*   **Templates:** Interfaces para interação do usuário.

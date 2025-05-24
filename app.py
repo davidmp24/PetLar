@@ -11,6 +11,8 @@ from datetime import datetime
 import logging
 from flask import Flask, make_response
 from flask_migrate import Migrate 
+from sqlalchemy import Enum
+import enum
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma_chave_dev_muito_segura_padrao')
@@ -22,8 +24,7 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///petlar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)  
-
+db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 class Admin(db.Model):
@@ -216,6 +217,42 @@ def remover_arquivo_se_existe(diretorio, nome_arquivo):
             except OSError as e:
                 app.logger.error(f"Erro ao remover arquivo {caminho_completo}: {e}")
     return False        
+
+class TipoSuprimento(enum.Enum):
+    RACAO = "Ração"
+    AGUA = "Água"
+
+class PontoAlimentacao(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome_identificador = db.Column(db.String(100), nullable=False, unique=True)
+    animal_id = db.Column(db.Integer, db.ForeignKey('animal.id'), nullable=True)
+    animal_associado = db.relationship('Animal', backref=db.backref('pontos_alimentacao', lazy='dynamic'))
+    tipo_suprimento = db.Column(Enum(TipoSuprimento), nullable=False) 
+    capacidade_total_estimada = db.Column(db.Float, nullable=True) 
+    unidade_medida = db.Column(db.String(10), nullable=True) 
+
+    # Último status registrado manualmente
+    nivel_atual_estimado_percentual = db.Column(db.Integer, nullable=True, default=100) 
+    data_ultima_verificacao = db.Column(db.DateTime, nullable=True, default=db.func.current_timestamp())
+    data_ultimo_reabastecimento = db.Column(db.DateTime, nullable=True)
+
+    # Relação com os registros históricos
+    registros_niveis = db.relationship('RegistroNivelSuprimento', backref='ponto_alimentacao', lazy='dynamic', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<PontoAlimentacao {self.id}: {self.nome_identificador}>'
+
+class RegistroNivelSuprimento(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ponto_alimentacao_id = db.Column(db.Integer, db.ForeignKey('ponto_alimentacao.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    nivel_percentual_registrado = db.Column(db.Integer, nullable=False) 
+    reabastecido = db.Column(db.Boolean, default=False) 
+    observacao = db.Column(db.String(200), nullable=True) 
+    registrado_por = db.Column(db.String(50), nullable=True) 
+
+    def __repr__(self):
+        return f'<RegistroNivel {self.id} para Ponto {self.ponto_alimentacao_id} - {self.nivel_percentual_registrado}%>'
 
 app.logger.setLevel(logging.DEBUG)
 
@@ -1482,6 +1519,166 @@ def get_adotante_api(adotante_id):
     except Exception as e:
         app.logger.error(f"Erro na API /api/adotantes/{adotante_id}: {e}")
         return jsonify({"erro": "Ocorreu um erro interno ao processar a solicitação."}), 500
+    
+@app.route('/iot/pontos_alimentacao')
+def listar_pontos_alimentacao():
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    try:
+        pontos = PontoAlimentacao.query.order_by(PontoAlimentacao.nome_identificador).all()
+        alertas_pontos = []
+        for ponto in pontos:
+            if ponto.nivel_atual_estimado_percentual is not None and ponto.nivel_atual_estimado_percentual < 25:
+                alertas_pontos.append({
+                    "id": ponto.id,
+                    "nome": ponto.nome_identificador,
+                    "nivel": ponto.nivel_atual_estimado_percentual,
+                    "tipo": ponto.tipo_suprimento.value,
+                    "animal_nome": ponto.animal_associado.nome if ponto.animal_associado else "Geral"
+                })
+    except Exception as e:
+        flash(f"Erro ao listar pontos de alimentação: {e}", "danger")
+        app.logger.error(f"Erro Listar Pontos Alimentacao: {e}")
+        pontos = []
+        alertas_pontos = []
+    return render_template('iot/listar_pontos_alimentacao.html', pontos=pontos, alertas_pontos=alertas_pontos)
+
+@app.route('/iot/cadastrar_ponto_alimentacao', methods=['GET', 'POST'])
+def cadastrar_ponto_alimentacao():
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    
+    animais_disponiveis = Animal.query.order_by(Animal.nome).all() 
+
+    if request.method == 'POST':
+        nome = request.form.get('nome_identificador')
+        tipo_supr_str = request.form.get('tipo_suprimento')
+        animal_id_str = request.form.get('animal_id')
+        capacidade_str = request.form.get('capacidade_total_estimada')
+        unidade = request.form.get('unidade_medida')
+
+        erros = []
+        if not nome: erros.append("Nome identificador é obrigatório.")
+        if not tipo_supr_str: erros.append("Tipo de suprimento é obrigatório.")
+        
+        tipo_suprimento_enum = None
+        try:
+            tipo_suprimento_enum = TipoSuprimento[tipo_supr_str.upper()]
+        except KeyError:
+            erros.append("Tipo de suprimento inválido.")
+
+        animal_id = None
+        if animal_id_str and animal_id_str != "None":
+            try:
+                animal_id = int(animal_id_str)
+            except ValueError:
+                erros.append("ID do animal inválido.")
+        
+        capacidade = None
+        if capacidade_str:
+            try:
+                capacidade = float(capacidade_str)
+                if capacidade <=0: erros.append("Capacidade deve ser positiva.")
+            except ValueError:
+                erros.append("Capacidade deve ser um número.")
+
+        if erros:
+            for erro in erros: flash(erro, 'danger')
+            return render_template('iot/cadastrar_ponto_alimentacao.html', 
+                                   form_data=request.form, 
+                                   animais_disponiveis=animais_disponiveis,
+                                   tipos_suprimento=TipoSuprimento)
+
+        novo_ponto = PontoAlimentacao(
+            nome_identificador=nome,
+            tipo_suprimento=tipo_suprimento_enum,
+            animal_id=animal_id,
+            capacidade_total_estimada=capacidade,
+            unidade_medida=unidade,
+            nivel_atual_estimado_percentual=100, 
+            data_ultimo_reabastecimento=datetime.utcnow()
+        )
+        try:
+            db.session.add(novo_ponto)
+            db.session.commit()
+            flash(f'Ponto de alimentação "{nome}" cadastrado com sucesso!', 'success')
+            return redirect(url_for('listar_pontos_alimentacao'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao cadastrar ponto: {e}', 'danger')
+            app.logger.error(f"Erro DB Cad Ponto Alimentacao: {e}")
+
+    return render_template('iot/cadastrar_ponto_alimentacao.html', 
+                           form_data=None, 
+                           animais_disponiveis=animais_disponiveis,
+                           tipos_suprimento=TipoSuprimento) 
+
+@app.route('/iot/registrar_nivel_ponto/<int:ponto_id>', methods=['GET', 'POST'])
+def registrar_nivel_ponto(ponto_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    
+    ponto = PontoAlimentacao.query.get_or_404(ponto_id)
+
+    if request.method == 'POST':
+        nivel_str = request.form.get('nivel_percentual')
+        observacao = request.form.get('observacao')
+        reabastecido_chk = request.form.get('reabastecido') == 'on'
+
+        erros = []
+        nivel_percentual = None
+
+        if reabastecido_chk:
+            nivel_percentual = 100 
+        elif nivel_str:
+            try:
+                nivel_percentual = int(nivel_str)
+                if not (0 <= nivel_percentual <= 100):
+                    erros.append("Nível percentual deve ser entre 0 e 100.")
+            except ValueError:
+                erros.append("Nível percentual deve ser um número inteiro.")
+        else:
+            erros.append("Nível percentual é obrigatório se não for reabastecimento.")
+
+        if erros:
+            for erro in erros: flash(erro, 'danger')
+            return render_template('iot/registrar_nivel_ponto.html', ponto=ponto, form_data=request.form)
+
+        # Atualiza o ponto de alimentação
+        ponto.nivel_atual_estimado_percentual = nivel_percentual
+        ponto.data_ultima_verificacao = datetime.utcnow()
+        if reabastecido_chk:
+            ponto.data_ultimo_reabastecimento = datetime.utcnow()
+
+        # Cria um registro histórico
+        novo_registro = RegistroNivelSuprimento(
+            ponto_alimentacao_id=ponto.id,
+            nivel_percentual_registrado=nivel_percentual,
+            reabastecido=reabastecido_chk,
+            observacao=observacao,
+            registrado_por=session.get('admin') 
+        )
+        try:
+            db.session.add(novo_registro)
+            db.session.commit()
+            flash(f'Nível do ponto "{ponto.nome_identificador}" atualizado com sucesso!', 'success')
+            return redirect(url_for('listar_pontos_alimentacao'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao registrar nível: {e}', 'danger')
+            app.logger.error(f"Erro DB Reg Nivel Ponto: {e}")
+            
+    form_data = {'nivel_percentual': ponto.nivel_atual_estimado_percentual or 100}
+    return render_template('iot/registrar_nivel_ponto.html', ponto=ponto, form_data=form_data)
+
+@app.route('/iot/ponto_alimentacao/<int:ponto_id>/historico')
+def historico_ponto_alimentacao(ponto_id):
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+    ponto = PontoAlimentacao.query.get_or_404(ponto_id)
+    registros = RegistroNivelSuprimento.query.filter_by(ponto_alimentacao_id=ponto_id)\
+                .order_by(RegistroNivelSuprimento.timestamp.desc()).all()
+    return render_template('iot/historico_ponto_alimentacao.html', ponto=ponto, registros=registros)    
 
 if __name__ == '__main__':
     with app.app_context():

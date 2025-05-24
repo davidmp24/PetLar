@@ -1,0 +1,56 @@
+{% extends 'index.html' %}
+{% block title %}Registrar Nível - {{ ponto.nome_identificador }}{% endblock %}
+{% block page_title %}Registrar Nível/Reabastecimento: {{ ponto.nome_identificador }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-light">Ponto: <span class="text-info">{{ ponto.nome_identificador }}</span></h3>
+    <p class="text-muted">Tipo: {{ ponto.tipo_suprimento.value }}
+        {% if ponto.animal_associado %} | Animal: {{ ponto.animal_associado.nome }} {% endif %}
+    </p>
+    <div class="card p-4 shadow-lg bg-dark text-light mx-auto" style="max-width: 600px;">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="nivel_percentual" class="form-label">Nível Atual Estimado (%)<span class="text-danger">*</span></label>
+                <input type="range" class="form-range" min="0" max="100" step="5" id="nivel_percentual_slider" value="{{ (form_data.get('nivel_percentual', ponto.nivel_atual_estimado_percentual) if form_data else ponto.nivel_atual_estimado_percentual) or 75 }}" oninput="updateSliderValue(this.value)">
+                <input type="number" class="form-control bg-secondary text-light mt-2" id="nivel_percentual" name="nivel_percentual" min="0" max="100" required value="{{ (form_data.get('nivel_percentual', ponto.nivel_atual_estimado_percentual) if form_data else ponto.nivel_atual_estimado_percentual) or 75 }}">
+                <div id="slider_value_display" class="form-text text-light">Valor: {{ (form_data.get('nivel_percentual', ponto.nivel_atual_estimado_percentual) if form_data else ponto.nivel_atual_estimado_percentual) or 75 }}%</div>
+            </div>
+             <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="reabastecido" name="reabastecido" {% if form_data and form_data.get('reabastecido') %}checked{% endif %}>
+                <label class="form-check-label" for="reabastecido">Marcar como Reabastecido (Define nível para 100%)</label>
+            </div>
+            <div class="mb-3">
+                <label for="observacao" class="form-label">Observação (Opcional)</label>
+                <textarea class="form-control bg-secondary text-light" id="observacao" name="observacao" rows="2">{{ form_data.get('observacao', '') if form_data else '' }}</textarea>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Salvar Registro</button>
+                <a href="{{ url_for('listar_pontos_alimentacao') }}" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function updateSliderValue(value) {
+        document.getElementById('nivel_percentual').value = value;
+        document.getElementById('slider_value_display').textContent = 'Valor: ' + value + '%';
+    }
+    // Sincronizar o slider com o input number na carga inicial e quando o input number muda
+    document.addEventListener('DOMContentLoaded', function() {
+        const slider = document.getElementById('nivel_percentual_slider');
+        const numberInput = document.getElementById('nivel_percentual');
+        const display = document.getElementById('slider_value_display');
+
+        if (slider && numberInput && display) {
+            slider.value = numberInput.value; // Sincroniza na carga
+            display.textContent = 'Valor: ' + numberInput.value + '%';
+
+            numberInput.addEventListener('input', function() {
+                slider.value = this.value;
+                display.textContent = 'Valor: ' + this.value + '%';
+            });
+        }
+    });
+</script>
+{% endblock %}
