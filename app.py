@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
@@ -70,6 +70,37 @@ class Animal(db.Model):
            
             return url_for('static', filename='images/placeholder_animal.png', _external=True) 
         
+    def to_dict(self, include_adotante_info=False):
+        animal_data = {
+            'id': self.id,
+            'nome': self.nome,
+            'especie': self.especie,
+            'raca': self.raca,
+            'sexo': self.sexo,
+            'idade': self.idade,
+            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None, 
+            'temperamento': self.temperamento,
+            'comportamento_outros': self.comportamento_outros,
+            'comportamento_criancas': self.comportamento_criancas,
+            'doencas_preexistentes': self.doencas_preexistentes,
+            'tratamentos': self.tratamentos,
+            'cor': self.cor,
+            'tamanho': self.tamanho,
+            'localizacao_texto': self.localizacao,
+            'descricao': self.descricao,
+            'foto_url': self.foto_url, 
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'adotado': self.adotado
+        }
+        if self.adotado and self.adotante_id and include_adotante_info and self.adotante:
+            animal_data['adotante'] = {
+                'id': self.adotante.id,
+                'nome_completo': self.adotante.nome_completo
+                
+            }
+        return animal_data 
+
 # --- Configuração de Upload ---
 UPLOAD_FOLDER_BASE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
 
@@ -111,6 +142,7 @@ class Adotante(db.Model):
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     
+
 @property
 def foto_pessoal_url(self):
     if self.foto_pessoal_filename:
@@ -122,6 +154,44 @@ def foto_local_url(self):
     if self.foto_local_filename:
         return url_for('static', filename=f'uploads/adotantes/{self.foto_local_filename}', _external=True)
     return url_for('static', filename='images/placeholder_local.png', _external=True)   
+
+def to_dict_public(self): 
+        return {
+            'id': self.id,
+            'nome_completo': self.nome_completo,
+            'foto_pessoal_url': self.foto_pessoal_url if hasattr(self, 'foto_pessoal_url') else None
+        }
+
+def to_dict_full(self):
+        return {
+            'id': self.id,
+            'nome_completo': self.nome_completo,
+            'rg': self.rg,
+            'cpf': self.cpf,
+            'endereco': self.endereco,
+            'bairro': self.bairro,
+            'cidade': self.cidade,
+            'cep': self.cep,
+            'telefone': self.telefone,
+            'email': self.email,
+            'justificativa_adocao': self.justificativa_adocao,
+            'tem_outros_animais': self.tem_outros_animais,
+            'tempo_sozinho': self.tempo_sozinho,
+            'quantidade_animais': self.quantidade_animais,
+            'tipos_animais': self.tipos_animais,
+            'foto_pessoal_filename': self.foto_pessoal_filename,
+            'foto_local_filename': self.foto_local_filename,
+            'tem_criancas': self.tem_criancas,
+            'quantidade_criancas': self.quantidade_criancas,
+            'idades_criancas': self.idades_criancas,
+            'restricoes_criancas': self.restricoes_criancas,
+            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
+            'localizacao_mapa_texto': self.localizacao_mapa_texto,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'foto_pessoal_url': self.foto_pessoal_url if hasattr(self, 'foto_pessoal_url') else None,
+            'foto_local_url': self.foto_local_url if hasattr(self, 'foto_local_url') else None
+        }
 
 def criar_admin():
     with app.app_context():
@@ -1326,6 +1396,92 @@ def registrar_adocao_submit(animal_id):
 @app.route('/teste_mapa')
 def teste_mapa():
     return render_template('teste_mapa.html')        
+
+@app.route('/api/animais', methods=['GET'])
+def get_animais_api():
+    try:
+        query = Animal.query
+
+        status = request.args.get('status') 
+        especie_filter = request.args.get('especie')
+        idade_min_filter = request.args.get('idade_min')
+        idade_max_filter = request.args.get('idade_max')
+
+        if status:
+            if status.lower() == 'disponivel':
+                query = query.filter(Animal.adotado == False)
+            elif status.lower() == 'adotado':
+                query = query.filter(Animal.adotado == True)
+
+        if especie_filter:
+            query = query.filter(Animal.especie.ilike(f'%{especie_filter}%'))
+
+        if idade_min_filter and idade_min_filter.isdigit():
+            query = query.filter(Animal.idade >= int(idade_min_filter))
+
+        if idade_max_filter and idade_max_filter.isdigit():
+            query = query.filter(Animal.idade <= int(idade_max_filter))
+
+        # --- Paginação Opcional ---
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int) 
+        paginated_animais = query.order_by(Animal.data_cadastro.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        
+        animais_list = [animal.to_dict() for animal in paginated_animais.items]
+
+        return jsonify({
+            "animais": animais_list,
+            "total_resultados": paginated_animais.total,
+            "pagina_atual": paginated_animais.page,
+            "total_paginas": paginated_animais.pages,
+            "proxima_pagina": paginated_animais.next_num,
+            "pagina_anterior": paginated_animais.prev_num
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Erro na API /api/animais: {e}")
+        return jsonify({"erro": "Ocorreu um erro interno ao processar a solicitação."}), 500
+    
+@app.route('/api/animais/<int:animal_id>', methods=['GET'])
+def get_animal_api(animal_id):
+    try:
+        animal = Animal.query.get(animal_id)
+        if animal:
+            return jsonify(animal.to_dict(include_adotante_info=True)), 200
+        else:
+            return jsonify({"erro": "Animal não encontrado"}), 404
+    except Exception as e:
+        app.logger.error(f"Erro na API /api/animais/{animal_id}: {e}")
+        return jsonify({"erro": "Ocorreu um erro interno ao processar a solicitação."}), 500
+    
+@app.route('/api/adotantes', methods=['GET'])
+def get_adotantes_api():
+
+    if 'admin' not in session:
+        return jsonify({"erro": "Acesso não autorizado"}), 401
+
+    try:
+        adotantes = Adotante.query.order_by(Adotante.nome_completo).all()
+        adotantes_list = [adotante.to_dict_public() for adotante in adotantes]
+        return jsonify(adotantes_list), 200
+    except Exception as e:
+        app.logger.error(f"Erro na API /api/adotantes: {e}")
+        return jsonify({"erro": "Ocorreu um erro interno ao processar a solicitação."}), 500
+
+@app.route('/api/adotantes/<int:adotante_id>', methods=['GET'])
+def get_adotante_api(adotante_id):
+    if 'admin' not in session: 
+        return jsonify({"erro": "Acesso não autorizado"}), 401
+        
+    try:
+        adotante = Adotante.query.get(adotante_id)
+        if adotante:
+            return jsonify(adotante.to_dict_full()), 200
+        else:
+            return jsonify({"erro": "Adotante não encontrado"}), 404
+    except Exception as e:
+        app.logger.error(f"Erro na API /api/adotantes/{adotante_id}: {e}")
+        return jsonify({"erro": "Ocorreu um erro interno ao processar a solicitação."}), 500
 
 if __name__ == '__main__':
     with app.app_context():

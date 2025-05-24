@@ -2,19 +2,19 @@
 
 :root {
     /* --- Paleta Dark Theme --- */
-    --bg-dark-primary: #1f1f1f;    /* Fundo principal (o mais escuro) */
-    --bg-dark-secondary: #2d2d2d; /* Fundo para elementos sobrepostos (cards, inputs) */
-    --bg-dark-tertiary: #3a3a3a;  /* Fundo para elementos interativos (hover) */
-    --bg-sidebar: #252525;        /* Fundo específico da Sidebar */
-    --border-dark: #444444;       /* Bordas sutis */
+    --bg-dark-primary: #1f1f1f;   
+    --bg-dark-secondary: #2d2d2d; 
+    --bg-dark-tertiary: #3a3a3a; 
+    --bg-sidebar: #252525;       
+    --border-dark: #444444;     
 
-    --text-light-primary: #e0e0e0; /* Texto principal (branco suave) */
-    --text-light-secondary: #b0b0b0;/* Texto secundário (cinza claro) */
-    --text-link-sidebar: #c0c0c0;  /* Cor do link da sidebar */
+    --text-light-primary: #e0e0e0; 
+    --text-light-secondary: #b0b0b0;
+    --text-link-sidebar: #c0c0c0;  
     --text-link-sidebar-hover: #ffffff;
     --text-link-sidebar-active: #ffffff;
 
-    --accent-blue: #8ab4f8;       /* Azul de destaque */
+    --accent-blue: #8ab4f8;      
     --link-color: var(--accent-blue);
     --link-hover-color: #a6caff;
 
@@ -24,7 +24,7 @@
     --bs-warning-dark: #5d3a00; --bs-warning-text: #ffdca6;
     --bs-danger-dark: #5c1c1f;  --bs-danger-text: #f7b9bb;
 
-    --sidebar-width: 260px;       /* Largura da Sidebar */
+    --sidebar-width: 260px;      
 }
 
 /* --- Reset Básico e Fontes --- */
@@ -51,8 +51,8 @@ body {
 /* --- Sidebar --- */
 .sidebar {
     width: var(--sidebar-width);
-    height: 100vh; /* Altura total da janela */
-    position: fixed; /* Fica fixa na tela */
+    height: 100vh;
+    position: fixed; 
     top: 0;
     left: 0;
     background-color: var(--bg-sidebar);
@@ -60,8 +60,8 @@ body {
     display: flex;
     flex-direction: column;
     padding-top: 1rem;
-    transition: width 0.3s ease; /* Para futuras animações de recolher */
-    overflow-y: auto; /* Barra de rolagem se o conteúdo for maior */
+    transition: width 0.3s ease; 
+    overflow-y: auto; 
 }
 .sidebar-header {
     padding: 0.5rem 1.5rem;
@@ -80,37 +80,37 @@ body {
 }
 
 .sidebar-nav {
-    padding: 0 1rem; /* Espaçamento lateral para os itens */
-    flex-grow: 1; /* Ocupa o espaço restante na sidebar */
+    padding: 0 1rem; 
+    flex-grow: 1;
 }
 .sidebar-nav .nav-item {
     margin-bottom: 0.25rem;
 }
 .sidebar-nav .nav-link {
     color: var(--text-link-sidebar);
-    padding: 0.75rem 1rem; /* Espaçamento interno do link */
+    padding: 0.75rem 1rem; 
     display: flex;
     align-items: center;
     border-radius: 0.375rem;
     text-decoration: none;
     transition: background-color 0.2s ease, color 0.2s ease;
-    white-space: nowrap; /* Impede quebra de linha */
-    overflow: hidden;    /* Esconde texto que não cabe */
-    text-overflow: ellipsis; /* Adiciona '...' se não couber */
+    white-space: nowrap; 
+    overflow: hidden;    
+    text-overflow: ellipsis; 
 }
-.sidebar-nav .nav-link i.fa-fw { /* Ícones com largura fixa */
-    width: 1.5em; /* Ajuste a largura conforme necessário */
+.sidebar-nav .nav-link i.fa-fw { 
+    width: 1.5em; 
     text-align: center;
-    font-size: 1.1em; /* Tamanho do ícone */
-    margin-right: 0.8rem; /* Espaço entre ícone e texto */
+    font-size: 1.1em; 
+    margin-right: 0.8rem; 
 }
 .sidebar-nav .nav-link:hover {
     background-color: var(--bg-dark-tertiary);
     color: var(--text-link-sidebar-hover);
 }
 .sidebar-nav .nav-link.active {
-    background-color: var(--accent-blue); /* Cor de destaque para ativo */
-    color: var(--bg-dark-primary); /* Cor do texto para contraste */
+    background-color: var(--accent-blue); 
+    color: var(--bg-dark-primary); 
     font-weight: 500;
 }
 .sidebar-divider {
@@ -120,25 +120,25 @@ body {
 
 /* --- Área de Conteúdo Principal --- */
 .main-content {
-    margin-left: var(--sidebar-width); /* Empurra o conteúdo para a direita */
-    flex-grow: 1; /* Ocupa o espaço restante */
-    padding: 0; /* Remove padding padrão se houver */
+    margin-left: var(--sidebar-width); 
+    flex-grow: 1; 
+    padding: 0; 
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Importante para flexbox */
+    min-width: 0;
 }
 .content-header {
-    background-color: var(--bg-dark-secondary); /* Um pouco diferente do conteúdo */
+    background-color: var(--bg-dark-secondary); 
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-dark);
-    /* Adicione estilos para o h4 se necessário */
+
 }
 .content-body {
-    padding: 1.5rem; /* Espaçamento interno da área de conteúdo */
-    flex-grow: 1; /* Ocupa espaço vertical */
+    padding: 1.5rem;
+    flex-grow: 1; 
 }
 
-/* --- Estilos Gerais (Herdados da versão anterior, ajustados) --- */
+/* --- Estilos Gerais  --- */
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-light-primary);
@@ -179,7 +179,6 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
 .btn-primary:hover { background-color: #2b4a6a; border-color: #2b4a6a; }
 .btn-success { background-color: #1e7e34; border-color: #1e7e34; color: white;}
 .btn-success:hover { background-color: #176028; border-color: #176028; }
-/* ... outros estilos de botão ... */
 .btn-outline-secondary { color: var(--text-light-secondary); border-color: var(--border-dark); }
 .btn-outline-secondary:hover { color: var(--text-light-primary); background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); }
 
@@ -217,62 +216,55 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
 /* Badges */
 .badge { font-weight: 500; }
 .badge.bg-primary { background-color: var(--accent-blue) !important; color: var(--bg-dark-primary); }
-/* ... outros estilos de badge ... */
 
-/* --- Responsividade (Exemplo Básico) --- */
-/* Em telas menores que 'lg' (992px), escondemos a sidebar fixa
-   e removemos a margem do conteúdo. Você precisaria adicionar um
-   botão toggle e talvez usar o Offcanvas do Bootstrap para uma
-   experiência móvel completa. */
 @media (max-width: 991.98px) {
     .sidebar {
-        /* Pode esconder completamente ou reduzir a largura */
-        /* display: none; */
-        width: 0; /* Exemplo simples de "esconder" */
+
+        width: 0; 
         padding: 0;
         overflow: hidden;
         border: none;
     }
     .main-content {
-        margin-left: 0; /* Remove a margem quando a sidebar some */
+        margin-left: 0; 
     }
-    /* Você precisaria de um botão para mostrar/esconder a sidebar (ex: usando Offcanvas) */
+
 }
 
 /* === Estilos para Impressão === */
 @media print {
 
-    /* Esconder tudo por padrão */
+
     body * {
         visibility: hidden;
     }
 
-    /* Tornar a área imprimível e seus filhos visíveis */
+
     .printable-area, .printable-area * {
         visibility: visible;
     }
 
-    /* Posicionar a área imprimível para ocupar a página */
+
     .printable-area {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        margin: 0 !important; /* Remover margens */
-        padding: 15px !important; /* Adicionar um pouco de padding para não colar nas bordas */
-        border: none !important; /* Remover borda do card */
-        box-shadow: none !important; /* Remover sombra do card */
-        background-color: white !important; /* Forçar fundo branco */
-        color: black !important; /* Forçar texto preto */
-        font-size: 10pt; /* Tamanho de fonte adequado para impressão */
+        margin: 0 !important;
+        padding: 15px !important; 
+        border: none !important; 
+        box-shadow: none !important;
+        background-color: white !important;
+        color: black !important; 
+        font-size: 10pt; 
     }
 
     /* Esconder especificamente elementos não desejados DENTRO da área imprimível */
-    .printable-area .action-buttons, /* Esconde a div dos botões que está DENTRO do detalhes_adotante */
-    .printable-area button,        /* Esconde outros botões se houver */
-    .printable-area a.btn         /* Esconde links com estilo de botão */
+    .printable-area .action-buttons,
+    .printable-area button,       
+    .printable-area a.btn        
      {
-        display: none !important; /* Garante que os botões não apareçam */
+        display: none !important; 
     }
 
     /* Ajustar elementos específicos para impressão */
@@ -280,7 +272,7 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
         color: black !important;
         margin-top: 15px;
         margin-bottom: 5px;
-        font-size: 12pt; /* Ajuste tamanho dos títulos */
+        font-size: 12pt;
     }
      .printable-area h3 { font-size: 14pt; }
 
@@ -291,8 +283,8 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     }
 
      .printable-area hr {
-        display: block; /* Garante que HR apareça se não escondido */
-        border-top: 1px solid #ccc !important; /* Cor clara para o divisor */
+        display: block; 
+        border-top: 1px solid #ccc !important;
         margin-top: 10px;
         margin-bottom: 10px;
     }
@@ -304,7 +296,7 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
         color: black !important;
     }
      .printable-area .badge {
-        border: 1px solid #ccc; /* Adiciona borda a badges */
+        border: 1px solid #ccc; 
         color: black !important;
         background-color: white !important;
         padding: 0.2em 0.4em;
@@ -313,32 +305,23 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
 
     /* Ajustar imagens para impressão */
     .printable-area img {
-        max-width: 90% !important; /* Limita largura da imagem na página */
-        max-height: 250px !important; /* Limita altura */
-        height: auto; /* Mantém proporção */
-        border: 1px solid #eee; /* Adiciona borda sutil */
-        page-break-inside: avoid; /* Tenta evitar que a imagem quebre entre páginas */
+        max-width: 90% !important; 
+        max-height: 250px !important; 
+        height: auto; 
+        border: 1px solid #eee; 
+        page-break-inside: avoid;
         margin-bottom: 10px;
     }
 
-     /* Esconde links que não são botões, se necessário (opcional) */
-     /*
-     .printable-area a:not(.btn) {
-         text-decoration: none;
-         color: black !important;
-     }
-     */
-
-    /* Evitar quebras de página dentro de seções se possível */
     .printable-area .row > div {
          page-break-inside: avoid;
     }
 
-} /* Fim do @media print */
+}
 
 .skip-link {
     position: absolute;
-    top: -40px; /* Ou qualquer valor que o esconda fora da tela */
+    top: -40px;
     left: 0;
     background: #eee;
     color: #333;
@@ -347,14 +330,14 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     transition: top 0.2s ease-in-out;
 }
 .skip-link:focus {
-    top: 0; /* Traz para a tela quando recebe foco */
+    top: 0;
 }
 
-/* Em static/style.css ou dentro de <style> no index.html */
+
 
 @media print {
     /* Esconde o menu lateral na impressão */
-    .sidebar, nav.bg-dark.text-light.vh-100.p-3 { /* Seja específico para o seu menu lateral */
+    .sidebar, nav.bg-dark.text-light.vh-100.p-3 { 
         display: none !important;
     }
 
@@ -362,62 +345,59 @@ a:hover { color: var(--link-hover-color); text-decoration: underline; }
     main.main-content, main.flex-grow-1.p-4 {
         margin-left: 0 !important;
         width: 100% !important;
-        padding: 0 !important; /* Remove padding se necessário */
+        padding: 0 !important; 
     }
 
     /* Esconde os botões de ação e outros elementos não desejados na impressão */
-    .btn, /* Esconde todos os botões Bootstrap */
-    .no-print, /* Adicione esta classe a qualquer elemento que você não quer imprimir */
-    a[href*="editar_"], /* Esconde links de edição */
-    a[href*="listar_"] /* Esconde links "Voltar para Lista" */
+    .btn, 
+    .no-print, 
+    a[href*="editar_"],
+    a[href*="listar_"] 
     {
         display: none !important;
     }
 
     /* Ajustes gerais para impressão */
     body {
-        background-color: #fff !important; /* Fundo branco para impressão */
-        color: #000 !important; /* Texto preto para impressão */
-        font-size: 10pt; /* Tamanho de fonte adequado para impressão */
-        margin: 1cm; /* Margens da página */
+        background-color: #fff !important; 
+        color: #000 !important; 
+        font-size: 10pt; 
+        margin: 1cm;
     }
 
     .card {
-        border: 1px solid #ccc !important; /* Adiciona uma borda leve ao card na impressão */
-        box-shadow: none !important; /* Remove sombra */
-        background-color: #fff !important; /* Fundo branco para o card */
+        border: 1px solid #ccc !important; 
+        box-shadow: none !important; 
+        background-color: #fff !important;
     }
 
-    h1, h2, h3, h4, h5, h6, p, strong, span, div { /* Garante que o texto seja preto */
+    h1, h2, h3, h4, h5, h6, p, strong, span, div { 
         color: #000 !important;
     }
     .text-light, .text-info, .text-warning, .text-muted {
-         color: #000 !important; /* Força texto preto para classes de cor clara */
+         color: #000 !important;
     }
     .badge {
-        border: 1px solid #000; /* Adiciona borda à badge para melhor visualização */
+        border: 1px solid #000; 
     }
     hr.border-light {
-        border-color: #ccc !important; /* Torna a linha horizontal mais visível */
+        border-color: #ccc !important; 
     }
 
-    /* Ajusta o tamanho das fotos para impressão, se necessário */
+
     img.img-fluid, img.img-thumbnail {
-        max-width: 70% !important; /* Exemplo, ajuste conforme necessário */
+        max-width: 70% !important; 
         height: auto !important;
-        page-break-inside: avoid; /* Tenta evitar que a imagem quebre entre páginas */
-    }
-
-    /* Evita quebras de página dentro de seções se possível */
-    .section, .card .row > div { /* .section é uma classe hipotética para suas seções de detalhes */
         page-break-inside: avoid;
     }
 
-    /* Se estiver usando o mapa Leaflet na página de detalhes, ele pode não imprimir bem.
-       Você pode optar por escondê-lo na impressão: */
-    #animalDetailMap, #adotanteDetailMap {
-        display: none !important; /* Esconde o mapa interativo na impressão */
+ 
+    .section, .card .row > div { 
+        page-break-inside: avoid;
     }
-    /* Ou, se quiser tentar imprimir, ajuste o tamanho e remova controles interativos via CSS se possível,
-       mas a renderização de mapas interativos na impressão é geralmente problemática. */
+
+
+    #animalDetailMap, #adotanteDetailMap {
+        display: none !important; 
+
 }
